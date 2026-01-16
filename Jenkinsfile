@@ -63,7 +63,7 @@ pipeline {
 
                     // prod 프로필로 컨테이너 실행. 모든 env 는 env‑file 로 전달
                     sh """
-                        docker run -d --name slog-container -p 8888:8080 \\
+                        docker run -d --name plog-container -p 8888:8080 \\
                           --env-file ${env.ENV_FILE_PATH} \\
                           --network docker_backend \\
                           ${DOCKER_IMAGE_NAME}
@@ -90,7 +90,7 @@ pipeline {
 
                 def desc = """
     ━━━━━━━━━━━━━━━━━━━━━━━━━━
-    📦 slog Jenkins Pipeline
+    📦 plog Jenkins Pipeline
 
     ✅ 빌드 성공
 
@@ -108,7 +108,7 @@ pipeline {
                     description: desc,
                     link: jenkinsUrl,
                     result: currentBuild.currentResult,
-                    title: "📦 slog Jenkins Pipeline",
+                    title: "📦 plog Jenkins Pipeline",
                     webhookURL: env.DISCORD_WEBHOOK
                 )
             }
@@ -126,7 +126,7 @@ pipeline {
 
                 def desc = """
     ━━━━━━━━━━━━━━━━━━━━━━━━━━
-    📦 slog Jenkins Pipeline
+    📦 plog Jenkins Pipeline
 
     ❌ 빌드 실패
 
@@ -144,7 +144,7 @@ pipeline {
                     description: desc,
                     link: jenkinsUrl,
                     result: currentBuild.currentResult,
-                    title: "📦 slog Jenkins Pipeline",
+                    title: "📦 plog Jenkins Pipeline",
                     webhookURL: env.DISCORD_WEBHOOK
                 )
             }
