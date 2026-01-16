@@ -5,10 +5,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.*;
 
+import static lombok.AccessLevel.PROTECTED;
+
 @Entity
 @Getter
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = PROTECTED)
 @AllArgsConstructor
 public class Member extends BaseEntity {
     @Column(unique = true, nullable = false)
