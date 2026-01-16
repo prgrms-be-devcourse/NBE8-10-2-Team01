@@ -23,7 +23,6 @@ import static lombok.AccessLevel.PROTECTED;
 public abstract class BaseEntity {
     @Id
     @GeneratedValue(strategy = IDENTITY)
-    @Setter(PROTECTED)
     private Long id;
 
     @CreatedDate
@@ -37,7 +36,7 @@ public abstract class BaseEntity {
         if (o == this) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BaseEntity that = (BaseEntity) o;
-        return id == that.id;
+        return Objects.equals(id, that.id);
     }
 
     @Override
