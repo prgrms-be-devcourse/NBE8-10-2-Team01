@@ -85,7 +85,7 @@ pipeline {
                 def shortSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
 
                 def jenkinsUrl = "http://jack8226.ddns.net:3005/job/plog/${env.BUILD_NUMBER}/"
-                def reportUrl = "not exist"//"${jenkinsUrl}execution/node/3/ws/build/reports/tests/test/index.html"
+                def reportUrl = "${jenkinsUrl}execution/node/3/ws/build/reports/tests/test/index.html"
 
 
                 def desc = """
@@ -122,7 +122,7 @@ pipeline {
                 def shortSha = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
 
                 def jenkinsUrl = "http://jack8226.ddns.net:3005/job/plog/${env.BUILD_NUMBER}/"
-                def reportUrl = "not exist"//"${jenkinsUrl}execution/node/3/ws/build/reports/tests/test/index.html""${jenkinsUrl}execution/node/3/ws/build/reports/tests/test/index.html"
+                def reportUrl = "${jenkinsUrl}execution/node/3/ws/build/reports/tests/test/index.html"
 
                 def desc = """
     ━━━━━━━━━━━━━━━━━━━━━━━━━━
