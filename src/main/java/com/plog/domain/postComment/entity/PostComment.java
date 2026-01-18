@@ -1,13 +1,15 @@
 package com.plog.domain.postComment.entity;
 
+import com.plog.global.jpa.entity.BaseEntity;
+import com.plog.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * 댓글 엔티티
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ *
  *
  * <p><b>상속 정보:</b><br>
  * 상속 정보를 적습니다.
@@ -19,10 +21,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-public class PostComment extends BaseEntity{
+public class PostComment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    private Memeber author;
+    private Member author;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)

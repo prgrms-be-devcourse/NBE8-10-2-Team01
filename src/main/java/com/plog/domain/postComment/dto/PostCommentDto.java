@@ -30,8 +30,8 @@ public record PostCommentDto(
                 postComment.getContent(),
                 postComment.getAuthor().getId(),
                 postComment.getPost().getId(),
-                postComment.getCreated_date(),
-                postComment.getModified_date()
+                postComment.getCreateDate(),
+                postComment.getModifyDate()
         );
     }
 

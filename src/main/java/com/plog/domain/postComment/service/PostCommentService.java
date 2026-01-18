@@ -1,9 +1,14 @@
 package com.plog.domain.postComment.service;
 
+import com.plog.domain.member.entity.Member;
+import com.plog.domain.postComment.entity.PostComment;
 import com.plog.domain.postComment.repository.PostCommentRepository;
 import com.plog.global.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 코드에 대한 전체적인 역할을 적습니다.
@@ -24,7 +29,15 @@ public class PostCommentService {
 
     private final PostCommentRepository postCommentRepository;
 
-    public PostComment write(Member author, PostComment postComment){
+
+    //수정필요
+    public PostComment write(
+            Post post, String content
+    ){
+
+        PostComment postComment = new PostComment();
+        postComment.setPost(post);
+        postComment.setContent(content);
         return postCommentRepository.save(postComment);
     }
 
@@ -36,5 +49,8 @@ public class PostCommentService {
         postCommentRepository.delete(postComment);
     }
 
+    public List<PostComment> findAll(){ return  postCommentRepository.findAll(); }
+
+    public PostComment findById(Long id){ return postCommentRepository.findById(id).get(); }
 
 }

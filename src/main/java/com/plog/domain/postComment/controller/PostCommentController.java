@@ -2,12 +2,19 @@ package com.plog.domain.postComment.controller;
 
 import com.plog.domain.postComment.dto.PostCommentDto;
 import com.plog.domain.postComment.entity.PostComment;
+import com.plog.domain.postComment.service.PostCommentService;
 import com.plog.global.response.CommonResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import com.plog.domain.postComment.service.PostCommentService;
 
 
 import java.util.List;
@@ -48,6 +55,7 @@ public class PostCommentController {
     ){
 
         Optional<Post> postOptional = postService.findById(postId);
+
         if (postOptional.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
@@ -56,7 +64,7 @@ public class PostCommentController {
 
         Post post = postOptional.get();
 
-        PostComment postComment = postCommentService.writeComment(post, reqBody);
+        PostComment postComment = postCommentService.write(post, reqBody.content);
 
         PostCommentDto dto = new PostCommentDto(postComment);
 
@@ -67,7 +75,7 @@ public class PostCommentController {
     @Transactional
     @Operation(summary = "삭제")
     public ResponseEntity<CommonResponse<Void>> delete(
-            @PathVariable int commentId
+            @PathVariable long commentId
     ){
 
         PostComment postComment = postCommentService.findById(commentId).get();
@@ -75,6 +83,8 @@ public class PostCommentController {
         postCommentService.delete(postComment);
 
     }
+
+
 
 
 }
