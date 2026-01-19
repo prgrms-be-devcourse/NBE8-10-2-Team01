@@ -21,7 +21,7 @@ import tools.jackson.databind.ObjectMapper;
  * <p><b>외부 모듈:</b><br>
  * Jackson Databind 라이브러리에 의존성을 가집니다.
  *
- * @author yyj96
+ * @author minhee
  * @see
  * @since 2026-01-15
  */

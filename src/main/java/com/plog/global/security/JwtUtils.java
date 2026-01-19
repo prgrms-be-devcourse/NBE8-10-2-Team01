@@ -26,8 +26,7 @@ import java.util.Map;
  * Spring의 {@link @Component} 어노테이션을 통해 싱글톤 빈으로 관리합니다.
  * 필요한 서비스 레이어에서 의존성 주입(DI)을 통해 사용됩니다.
  *
- * @author yyj96
- * @see
+ * @author minhee
  * @since 2026-01-16
  */
 

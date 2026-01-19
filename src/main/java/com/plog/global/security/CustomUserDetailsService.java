@@ -31,7 +31,7 @@ import java.util.List;
  * <p><b>외부 모듈:</b><br>
  * Spring Security Core 및 Spring Data JPA 라이브러리를 사용합니다.
  *
- * @author yyj96
+ * @author minhee
  * @since 2026-01-16
  * @see SecurityUser
  * @see UserDetailsService

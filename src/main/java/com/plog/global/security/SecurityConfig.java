@@ -43,11 +43,9 @@ import java.util.List;
  * <p><b>외부 모듈:</b><br>
  * Spring Security, BCryptPasswordEncoder 등을 사용하여 보안 기능을 구현합니다.
  *
- * @author yyj96
+ * @author minhee
  * @since 2026-01-16
  */
-
-// TODO: Execption 형식 맞추기
 
 @Configuration
 @EnableWebSecurity

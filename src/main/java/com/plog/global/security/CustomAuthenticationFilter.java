@@ -39,7 +39,7 @@ import java.util.List;
  * <p><b>외부 모듈:</b><br>
  * Spring Security Core 및 Servlet API를 사용합니다.
  *
- * @author yyj96
+ * @author minhee
  * @since 2026-01-16
  * @see SecurityContextHolder
  * @see JwtUtils

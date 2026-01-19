@@ -27,7 +27,7 @@ import java.util.Collection;
  * <p><b>외부 모듈:</b><br>
  * Spring Security Core 모듈을 활용합니다.
  *
- * @author yyj96
+ * @author minhee
  * @see org.springframework.security.core.userdetails.UserDetails
  * @since 2026-01-16
  */
