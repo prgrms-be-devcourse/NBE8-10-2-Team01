@@ -35,7 +35,6 @@ import java.util.Collection;
 @Getter
 public class SecurityUser extends User {
     private final Long id;
-    private final String email;
     private final String nickname;
 
     @Builder
@@ -46,12 +45,14 @@ public class SecurityUser extends User {
             String nickname,
             Collection<? extends GrantedAuthority> authorities
     ) {
-        super(email, password, authorities);
+        super(email, password, authorities); // email이 부모의 username에 저장됨
         this.id = id;
-        this.email = email;
         this.nickname = nickname;
     }
 
+    /**
+     * 부모 클래스(User)의 username 필드(이메일)를 반환하는 getter
+     */
     public String getEmail() {
         return super.getUsername();
     }
