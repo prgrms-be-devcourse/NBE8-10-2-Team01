@@ -22,7 +22,6 @@ import tools.jackson.databind.ObjectMapper;
  * Jackson Databind 라이브러리에 의존성을 가집니다.
  *
  * @author minhee
- * @see
  * @since 2026-01-15
  */
 

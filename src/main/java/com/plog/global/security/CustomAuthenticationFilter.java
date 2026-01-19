@@ -57,9 +57,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // TODO: API 요청이 아니라면 패스하는 로직 추가
-        // TODO: 인증, 인가가 필요 없는 API 요청이라면 패스하는 로직 추가
-        // TODO: try-catch 추가 필요
 
         String token = resolveToken(request);
 
