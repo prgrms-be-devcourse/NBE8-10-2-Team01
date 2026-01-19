@@ -1,5 +1,7 @@
 package com.plog.global.minio.storage;
 
+import com.plog.global.exception.errorCode.ImageErrorCode;
+import com.plog.global.exception.exceptions.ImageException;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -19,9 +21,33 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 2026-01-16
  */
 public interface ObjectStorage {
+
+    /**
+     * MultipartFile 형태의 파일을 MinIO 스토리지에 업로드합니다.
+     *
+     * @param file        업로드할 파일 객체
+     * @param destination 저장될 파일의 전체 경로 (파일명 포함)
+     * @return 저장된 파일의 전체 URL (Endpoint + Bucket + Path)
+     * @throws ImageException 파일 업로드 실패 시 {@link ImageErrorCode#IMAGE_UPLOAD_FAILED} 예외 발생
+     */
+
     String upload(MultipartFile file, String destination);
 
+    /**
+     * 지정된 경로의 파일을 MinIO 스토리지에서 삭제합니다.
+     *
+     * @param destination 삭제할 파일의 경로 (파일명 포함)
+     * @throws ImageException 파일 삭제 실패 시 {@link ImageErrorCode#IMAGE_DELETE_FAILED} 예외 발생
+     */
+
     void delete(String destination);
+
+    /**
+     * 전체 URL에서 스토리지 내부 저장 경로(Object Key)를 추출합니다.
+     *
+     * @param url 파일의 전체 URL
+     * @return 버킷 내부의 파일 경로 (Endpoint와 Bucket명을 제외한 나머지 경로)
+     */
 
     String parsePath(String url);
 }

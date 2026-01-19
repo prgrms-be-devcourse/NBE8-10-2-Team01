@@ -56,19 +56,10 @@ public class MinioStorage implements ObjectStorage {
         validateBucket();
     }
 
-    /**
-     * MultipartFile 형태의 파일을 MinIO 스토리지에 업로드합니다.
-     *
-     * @param file        업로드할 파일 객체
-     * @param destination 저장될 파일의 전체 경로 (파일명 포함)
-     * @return 저장된 파일의 전체 URL (Endpoint + Bucket + Path)
-     * @throws ImageException 파일 업로드 실패 시 {@link ImageErrorCode#IMAGE_UPLOAD_FAILED} 예외 발생
-     */
     @Override
     public String upload(MultipartFile file, String destination) {
-        try {
-            InputStream inputStream = file.getInputStream();
 
+        try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucket)
@@ -81,17 +72,12 @@ public class MinioStorage implements ObjectStorage {
 
         } catch (Exception e) {
             throw new ImageException(ImageErrorCode.IMAGE_UPLOAD_FAILED,
+
                     "[MinioStorage#upload] failed. dest=" + destination + ", cause=" + e.getMessage(),
                     "이미지 업로드 중 오류가 발생했습니다.");
         }
     }
 
-    /**
-     * 지정된 경로의 파일을 MinIO 스토리지에서 삭제합니다.
-     *
-     * @param destination 삭제할 파일의 경로 (파일명 포함)
-     * @throws ImageException 파일 삭제 실패 시 {@link ImageErrorCode#IMAGE_DELETE_FAILED} 예외 발생
-     */
     @Override
     public void delete(String destination) {
         try {
@@ -106,12 +92,6 @@ public class MinioStorage implements ObjectStorage {
         }
     }
 
-    /**
-     * 전체 URL에서 스토리지 내부 저장 경로(Object Key)를 추출합니다.
-     *
-     * @param url 파일의 전체 URL
-     * @return 버킷 내부의 파일 경로 (Endpoint와 Bucket명을 제외한 나머지 경로)
-     */
     @Override
     public String parsePath(String url) {
         if (url == null || !url.contains(endpoint + "/" + bucket)) {
