@@ -30,8 +30,6 @@ import java.util.Map;
  * @since 2026-01-16
  */
 
-// TODO: try-catch 예외 처리 필요
-
 @Component
 public class JwtUtils {
     @Value("${custom.jwt.secretKey}")
