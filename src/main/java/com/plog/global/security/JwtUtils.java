@@ -2,7 +2,6 @@ package com.plog.global.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ClaimsBuilder;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +19,7 @@ import java.util.Map;
  * 전달받은 토큰의 유효성을 검사하고 페이로드(Claims)를 추출하는 기능을 제공합니다.
  *
  * <p><b>작동 원리:</b><br>
- * 설정 파일에 정의된 {@code.jwt.secretKey}를 기반으로 HMAC-SHA 알고리즘을 사용하여 서명된 토큰을 생성합니다.
+ * 설정 파일에 정의된 custom.jwt.secretKey를 기반으로 HMAC-SHA 알고리즘을 사용하여 서명된 토큰을 생성합니다.
  *
  * <p><b>빈 관리:</b><br>
  * Spring의 {@link @Component} 어노테이션을 통해 싱글톤 빈으로 관리합니다.
