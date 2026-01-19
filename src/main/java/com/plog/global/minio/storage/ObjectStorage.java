@@ -1,4 +1,4 @@
-package com.plog.global.storage;
+package com.plog.global.minio.storage;
 
 import org.springframework.web.multipart.MultipartFile;
 

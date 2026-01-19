@@ -1,7 +1,8 @@
-package com.plog.global.config;
+package com.plog.global.minio.config;
 
 import io.minio.MinioClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 2026-01-16
  */
 @Configuration
+@ConditionalOnProperty(prefix = "minio", name = "enabled", havingValue = "true")
 public class MinioConfig {
 
     @Value("${minio.endpoint}")
