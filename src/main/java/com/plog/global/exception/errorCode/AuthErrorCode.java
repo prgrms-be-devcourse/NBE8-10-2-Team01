@@ -26,7 +26,10 @@ public enum AuthErrorCode implements ErrorCode {
     USER_DELETE_FAIL(HttpStatus.BAD_REQUEST, "failed to delete user"),
     SIGNUP_FAIL(HttpStatus.BAD_REQUEST, "failed to sign up"),
     LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "failed to login"),
-    USER_AUTH_FAIL(HttpStatus.FORBIDDEN, "user authorization failed");
+    USER_AUTH_FAIL(HttpStatus.FORBIDDEN, "user authorization failed"),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "token has expired"),
+    TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "invalid token"),
+    LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "login required");
 
     private final HttpStatus status;
     private final String message;
