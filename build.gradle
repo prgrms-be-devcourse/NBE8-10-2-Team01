@@ -55,6 +55,21 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+// .env 로부터 테스트 환경변수 로드
+def envProps = new Properties()
+file('.env').withInputStream { stream ->
+    stream.withReader('UTF-8') { reader ->
+        reader.eachLine { line ->
+            line = line.trim()
+            if (line && !line.startsWith('#') && line.contains('=')) {
+                def (k, v) = line.split('=', 2)
+                envProps[k] = v
+            }
+        }
+    }
+}
+
 tasks.named('test') {
+    environment envProps
     useJUnitPlatform()
 }
