@@ -3,6 +3,8 @@ package com.plog.domain.post.service;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.entity.PostStatus;
 import com.plog.domain.post.repository.PostRepository;
+import com.plog.global.exception.errorCode.PostErrorCode;
+import com.plog.global.exception.exceptions.PostException;
 import lombok.RequiredArgsConstructor;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -54,6 +56,15 @@ public class PostService {
                 .build();
 
         return postRepository.save(post).getId();
+    }
+
+    @Transactional
+    public Post getPostDetail(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
+                        "[PostService#getPostDetail] can't find user by id", "존재하지 않는 사용자입니다."));
+        post.incrementViewCount();
+        return post;
     }
 
     /**

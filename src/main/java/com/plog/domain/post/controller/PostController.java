@@ -3,6 +3,7 @@ package com.plog.domain.post.controller;
 import com.plog.domain.post.dto.PostCreateRequest;
 import com.plog.domain.post.dto.PostResponse;
 import com.plog.domain.post.service.PostService;
+import com.plog.global.response.CommonResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -43,12 +44,24 @@ public class PostController {
     /**
      * 새로운 게시물을 생성합니다.
      *
-     * @param request 제목과 본문이 담긴 DTO
-     * @return 생성된 게시물의 상세 정보와 201 Created 상태 코드
+     * @param request 게시물 제목과 본문 데이터
+     * @return 생성된 게시물의 ID를 포함한 공통 응답 객체 (201 Created)
      */
     @PostMapping
-    public ResponseEntity<Long> createPost(@Valid @RequestBody PostCreateRequest request) {
+    public ResponseEntity<CommonResponse<Long>> createPost(@Valid @RequestBody PostCreateRequest request) {
         Long postId = postService.createPost(request.title(), request.content());
-        return ResponseEntity.created(URI.create("/api/posts/" + postId)).body(postId);
+        return ResponseEntity.created(URI.create("/api/posts/" + postId)).body(CommonResponse.success(postId, "게시글 작성 성공"));
+    }
+
+    /**
+     * 특정 ID의 게시물을 상세 조회합니다.
+     *
+     * @param id 게시물 고유 식별자
+     * @return 조회된 게시물 정보와 성공 메시지를 포함한 공통 응답 객체 (200 OK)
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<CommonResponse<PostResponse>> getPost(@PathVariable Long id) {
+        PostResponse response = PostResponse.from(postService.getPostDetail(id));
+        return ResponseEntity.ok(CommonResponse.success(response, "게시글 조회 성공"));
     }
 }
