@@ -3,7 +3,6 @@ package com.plog.global.security;
 
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.response.CommonResponse;
-import com.plog.standard.util.Ut;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -52,6 +52,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final CustomAuthenticationFilter customAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -93,7 +94,7 @@ public class SecurityConfig {
                                             response.setStatus(errorCode.getHttpStatus().value());
 
                                             CommonResponse<Void> errorResponse = CommonResponse.fail(errorCode.getMessage());
-                                            response.getWriter().write(Ut.json.toString(errorResponse));
+                                            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                                         }
                                 )
                                 .accessDeniedHandler(
@@ -102,7 +103,7 @@ public class SecurityConfig {
 
                                             response.setStatus(HttpStatus.FORBIDDEN.value());
                                             CommonResponse<Void> errorResponse = CommonResponse.fail(AuthErrorCode.USER_AUTH_FAIL.getMessage());
-                                            response.getWriter().write(Ut.json.toString(errorResponse));
+                                            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                                         }
                                 )
                 );
