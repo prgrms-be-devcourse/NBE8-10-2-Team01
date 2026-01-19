@@ -47,4 +47,8 @@ public class Post extends BaseEntity{
 
     @Builder.Default
     private int viewCount = 0;
+
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
 }
