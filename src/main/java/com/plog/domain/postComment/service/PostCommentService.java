@@ -34,7 +34,6 @@ public class PostCommentService {
     public PostComment write(
             Post post, String content
     ){
-
         PostComment postComment = new PostComment();
         postComment.setPost(post);
         postComment.setContent(content);
