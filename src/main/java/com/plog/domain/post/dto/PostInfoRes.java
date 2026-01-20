@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
  * @see com.plog.domain.post.entity.Post
  * @since 2026-01-16
  */
-public record PostResponse(
+public record PostInfoRes(
         Long id,
         String title,
         String content,
@@ -41,8 +41,8 @@ public record PostResponse(
      * @param post 변환 대상 엔티티
      * @return 필드값이 매핑된 PostResponse 객체
      */
-    public static PostResponse from(Post post) {
-        return new PostResponse(
+    public static PostInfoRes from(Post post) {
+        return new PostInfoRes(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),

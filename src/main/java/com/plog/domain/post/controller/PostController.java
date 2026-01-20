@@ -1,15 +1,17 @@
 package com.plog.domain.post.controller;
 
-import com.plog.domain.post.dto.PostCreateRequest;
-import com.plog.domain.post.dto.PostResponse;
+import com.plog.domain.post.dto.PostCreateReq;
+import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.service.PostService;
 import com.plog.global.response.CommonResponse;
+import com.plog.global.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * 게시물 관련 HTTP 요청을 처리하는 컨트롤러 클래스입니다.
@@ -48,9 +50,9 @@ public class PostController {
      * @return 생성된 게시물의 ID를 포함한 공통 응답 객체 (201 Created)
      */
     @PostMapping
-    public ResponseEntity<CommonResponse<Long>> createPost(@Valid @RequestBody PostCreateRequest request) {
+    public ResponseEntity<Void> createPost(@Valid @RequestBody PostCreateReq request) {
         Long postId = postService.createPost(request.title(), request.content());
-        return ResponseEntity.created(URI.create("/api/posts/" + postId)).body(CommonResponse.success(postId, "게시글 작성 성공"));
+        return ResponseEntity.created(URI.create("/api/posts/" + postId)).build();
     }
 
     /**
@@ -60,8 +62,19 @@ public class PostController {
      * @return 조회된 게시물 정보와 성공 메시지를 포함한 공통 응답 객체 (200 OK)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CommonResponse<PostResponse>> getPost(@PathVariable Long id) {
-        PostResponse response = PostResponse.from(postService.getPostDetail(id));
+    public ResponseEntity<Response<PostInfoRes>> getPost(@PathVariable Long id) {
+        PostInfoRes response = postService.getPostDetail(id);
         return ResponseEntity.ok(CommonResponse.success(response, "게시글 조회 성공"));
+    }
+
+    /**
+     * 모든 게시물 목록을 최신순으로 조회합니다.
+     *
+     * @return 게시물 리스트와 성공 메시지를 포함한 공통 응답 객체
+     */
+    @GetMapping
+    public ResponseEntity<Response<List<PostInfoRes>>> getPosts() {
+        List<PostInfoRes> posts = postService.getPosts();
+        return ResponseEntity.ok(CommonResponse.success(posts, "게시글 목록 조회 성공"));
     }
 }

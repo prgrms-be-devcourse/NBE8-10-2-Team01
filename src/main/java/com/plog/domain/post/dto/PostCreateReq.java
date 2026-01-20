@@ -25,7 +25,7 @@ import jakarta.validation.constraints.NotBlank;
  * @see com.plog.domain.post.controller.PostController
  * @since 2026-01-16
  */
-public record PostCreateRequest(
+public record PostCreateReq(
         @NotBlank(message = "제목은 필수 입력 항목입니다.")
         String title,
 

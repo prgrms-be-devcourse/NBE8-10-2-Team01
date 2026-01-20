@@ -7,27 +7,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.given;
 
-@SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
-@Transactional
 public class PostServiceTest {
     @InjectMocks
-    private PostService postService;
+    private PostServiceImpl postService;
 
     @Mock
     private PostRepository postRepository;
 
     @Test
     @DisplayName("게시글 저장 시 마크다운이 제거된 요약글이 자동 생성")
-    void createPost_Success() {
+    void createPostSuccess() {
         String title = "테스트 제목";
         String content = "# Hello\n**Spring Boot**";
 
@@ -36,7 +33,7 @@ public class PostServiceTest {
                 .content(content)
                 .build();
 
-        BDDMockito.given(postRepository.save(ArgumentMatchers.any(Post.class)))
+        given(postRepository.save(ArgumentMatchers.any(Post.class)))
                 .willReturn(mockPost);
 
         postService.createPost(title, content);
@@ -50,7 +47,7 @@ public class PostServiceTest {
 
     @Test
     @DisplayName("본문이 150자를 초과하면 요약글은 150자까지만 저장되고 말줄임표가 붙는다")
-    void createPost_SummaryTruncation() {
+    void createPostSuccessSummaryTruncation() {
         String title = "제목";
         String longContent = "가".repeat(200);
 
@@ -59,7 +56,7 @@ public class PostServiceTest {
                 .content(longContent)
                 .build();
 
-        BDDMockito.given(postRepository.save(ArgumentMatchers.any(Post.class)))
+        given(postRepository.save(ArgumentMatchers.any(Post.class)))
                 .willReturn(mockPost);
 
         postService.createPost(title, longContent);

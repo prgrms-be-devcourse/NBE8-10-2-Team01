@@ -1,89 +1,58 @@
 package com.plog.domain.post.service;
 
-import com.plog.domain.post.entity.Post;
-import com.plog.domain.post.entity.PostStatus;
-import com.plog.domain.post.repository.PostRepository;
-import com.plog.global.exception.errorCode.PostErrorCode;
-import com.plog.global.exception.exceptions.PostException;
-import lombok.RequiredArgsConstructor;
-import org.commonmark.node.Node;
-import org.commonmark.parser.Parser;
-import org.commonmark.renderer.text.TextContentRenderer;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.plog.domain.post.dto.PostInfoRes;
+import java.util.List;
 
 /**
- * 게시물 관련 비즈니스 로직을 처리하는 서비스 클래스입니다.
+ * 게시물 관련 비즈니스 로직을 정의하는 인터페이스입니다.
  * <p>
- * 게시물의 생성, 수정, 조회, 삭제(CRUD) 기능을 제공하며,
- * 저장 시 마크다운 본문을 분석하여 검색용 순수 텍스트와 요약본을 자동으로 생성합니다.
+ * 게시물의 생성, 상세 조회, 목록 조회 등의 기능을 정의하며,
+ * 각 기능의 상세한 비즈니스 규칙과 처리 로직에 대한 명세를 제공합니다.
  *
- * <p><b>주요 생성자:</b><br>
- * {@code PostService(PostRepository postRepository)} <br>
- * 의존성 주입을 통해 레포지토리를 초기화합니다.
- *
- * <p><b>빈 관리:</b><br>
- * {@code @Service} 어노테이션을 통해 스프링 컨테이너에 의해 싱글톤 빈으로 관리됩니다.
- *
- * <p><b>외부 모듈:</b><br>
- * CommonMark 라이브러리를 사용하여 마크다운 텍스트 파싱을 처리합니다.
+ * <p><b>주요 기능 요약:</b><br>
+ * 1. 게시물 작성: 마크다운 본문 파싱 및 요약본 자동 생성 <br>
+ * 2. 상세 조회: 조회수 증가 로직 포함 <br>
+ * 3. 목록 조회: 최신순 정렬 반환
  *
  * @author MintyU
- * @since 2026-01-16
+ * @since 2026-01-19
  */
-@Service
-@Transactional(readOnly = true)
-@RequiredArgsConstructor
-public class PostService {
-    private final PostRepository postRepository;
+public interface PostService {
 
     /**
      * 새로운 게시물을 작성하고 저장합니다.
-     * * @param title 게시물 제목
+     * <p><b>실행 로직:</b><br>
+     * 1. 입력받은 마크다운(Markdown) 형식의 본문에서 특수 기호를 제거하여 순수 텍스트를 추출합니다. <br>
+     * 2. 추출된 텍스트의 앞부분을 최대 150자까지 잘라내어 목록 노출용 요약본(Summary)을 생성합니다. <br>
+     * 3. 게시물 상태를 'PUBLISHED'로 설정하여 데이터베이스에 영구 저장합니다.
+     *
+     * @param title 게시물 제목
      * @param content 마크다운 형식의 본문
-     * @return 저장된 게시물의 ID
+     * @return 저장된 게시물의 고유 식별자(ID)
      */
-    @Transactional
-    public Long createPost(String title, String content) {
-        String plainText = extractPlainText(content);
-        String summary = extractSummary(plainText);
-
-        Post post = Post.builder()
-                .title(title)
-                .content(content)
-                .summary(summary)
-                .status(PostStatus.PUBLISHED)
-                .build();
-
-        return postRepository.save(post).getId();
-    }
-
-    @Transactional
-    public Post getPostDetail(Long id) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
-                        "[PostService#getPostDetail] can't find post by id", "존재하지 않는 게시물입니다."));
-        post.incrementViewCount();
-        return post;
-    }
+    Long createPost(String title, String content);
 
     /**
-     * 마크다운 텍스트에서 특수기호를 제거하고 순수 텍스트만 추출합니다.
+     * 특정 ID의 게시물을 상세 조회합니다.
+     * <p><b>실행 로직:</b><br>
+     * 1. 전달받은 ID로 게시물을 검색하며, 존재하지 않을 경우 {@code PostException}을 발생시킵니다. <br>
+     * 2. 조회에 성공하면 해당 게시물의 누적 조회수를 1 증가시킵니다. <br>
+     * 3. 엔티티 객체를 응답용 DTO({@code PostInfoRes})로 변환하여 반환합니다.
+     *
+     * @param id 게시물 고유 식별자
+     * @return 조회된 게시물 정보 DTO
+     * @throws com.plog.global.exception.exceptions.PostException 게시물을 찾을 수 없을 때 발생
      */
-    private String extractPlainText(String markdown) {
-        Parser parser = Parser.builder().build();
-        Node document = parser.parse(markdown);
-        TextContentRenderer renderer = TextContentRenderer.builder().build();
-        return renderer.render(document);
-    }
+    PostInfoRes getPostDetail(Long id);
 
     /**
-     * 순수 텍스트에서 앞부분 150자만 추출하여 요약글을 만듭니다.
+     * 모든 게시물 목록을 조회합니다.
+     * <p><b>실행 로직:</b><br>
+     * 1. 데이터베이스의 모든 게시물을 조회합니다. <br>
+     * 2. 게시물의 ID를 기준으로 내림차순(최신순) 정렬을 수행합니다. <br>
+     * 3. 조회된 모든 엔티티를 응답용 DTO 리스트로 변환하여 반환합니다.
+     *
+     * @return 최신순으로 정렬된 게시물 정보 DTO 리스트
      */
-    private String extractSummary(String plainText) {
-        if (plainText.length() <= 150) {
-            return plainText;
-        }
-        return plainText.substring(0, 150) + "...";
-    }
+    List<PostInfoRes> getPosts();
 }
