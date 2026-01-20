@@ -18,9 +18,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -118,7 +116,7 @@ class PostControllerTest {
 
     @Test
     @DisplayName("게시글 수정 요청 시 성공 메시지와 함께 200 OK를 반환한다")
-    void updatePostApiSuccess() throws Exception {
+    void updatePostSuccess() throws Exception {
         // [When]
         ResultActions resultActions = mvc.perform(
                 patch("/api/posts/1")
@@ -138,5 +136,22 @@ class PostControllerTest {
 
         // 서비스의 updatePost 메서드가 올바른 파라미터로 호출되었는지 검증
         verify(postService).updatePost(eq(1L), eq("수정 제목"), eq("수정 본문"));
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 요청 시 성공하면 204 No Content를 반환한다")
+    void deletePostSuccess() throws Exception {
+        // [When]
+        ResultActions resultActions = mvc.perform(
+                delete("/api/posts/1")
+        ).andDo(print());
+
+        // [Then]
+        resultActions
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$").doesNotExist());
+
+        // 서비스의 deletePost 메서드가 호출되었는지 검증합니다.
+        verify(postService).deletePost(1L);
     }
 }

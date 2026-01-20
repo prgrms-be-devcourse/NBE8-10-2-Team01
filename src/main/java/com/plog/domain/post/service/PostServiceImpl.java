@@ -87,6 +87,18 @@ public class PostServiceImpl implements PostService {
         post.update(title, content, summary);
     }
 
+    @Override
+    @Transactional
+    public void deletePost(Long id) {
+        // 1. 게시물 존재 여부 확인 및 조회
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
+                        "[PostServiceImpl#deletePost] can't find post by id", "존재하지 않는 게시물입니다."));
+
+        // 2. 게시물 삭제
+        postRepository.delete(post);
+    }
+
     /**
      * 마크다운 텍스트에서 특수기호를 제거하고 순수 텍스트만 추출합니다.
      * * @param markdown 마크다운 원문

@@ -14,7 +14,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.BDDMockito.given;
 
@@ -38,7 +40,7 @@ public class PostServiceTest {
                 .content(content)
                 .build();
 
-        given(postRepository.save(ArgumentMatchers.any(Post.class)))
+        given(postRepository.save(any(Post.class)))
                 .willReturn(mockPost);
 
         postService.createPost(title, content);
@@ -61,7 +63,7 @@ public class PostServiceTest {
                 .content(longContent)
                 .build();
 
-        given(postRepository.save(ArgumentMatchers.any(Post.class)))
+        given(postRepository.save(any(Post.class)))
                 .willReturn(mockPost);
 
         postService.createPost(title, longContent);
@@ -111,4 +113,44 @@ public class PostServiceTest {
                 .hasMessageContaining("존재하지 않는 게시물입니다.");
     }
 
+    @Test
+    @DisplayName("게시글 삭제 시 해당 ID의 게시글이 존재하면 삭제를 수행한다")
+    void deletePostSuccess() {
+        // [Given]
+        Long postId = 1L;
+        Post post = Post.builder()
+                .title("삭제될 제목")
+                .content("삭제될 본문")
+                .build();
+
+        // findById 호출 시 삭제할 게시글이 있다고 가정합니다.
+        given(postRepository.findById(postId)).willReturn(Optional.of(post));
+
+        // [When]
+        postService.deletePost(postId);
+
+        // [Then]
+        // 1. findById가 호출되었는지 확인
+        verify(postRepository).findById(postId);
+        // 2. 실제 리포지토리의 delete 메서드가 해당 엔티티로 호출되었는지 확인
+        verify(postRepository).delete(post);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 ID로 삭제 요청 시 PostException이 발생한다")
+    void deletePostFailNotFound() {
+        // [Given]
+        Long postId = 99L;
+        // findById 호출 시 빈 값을 반환한다고 가정합니다.
+        given(postRepository.findById(postId)).willReturn(Optional.empty());
+
+        // [When & Then]
+        // 예외가 발생하는지 확인합니다.
+        assertThatThrownBy(() -> postService.deletePost(postId))
+                .isInstanceOf(PostException.class)
+                .hasMessageContaining("존재하지 않는 게시물입니다.");
+
+        // 예외가 발생했으므로 실제 delete 메서드는 호출되지 않아야 합니다.
+        verify(postRepository, never()).delete(any(Post.class));
+    }
 }

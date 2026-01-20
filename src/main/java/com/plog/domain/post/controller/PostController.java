@@ -100,4 +100,22 @@ public class PostController {
 
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 기존 게시물을 삭제합니다.
+     *
+     * <p><b>처리 프로세스:</b><br>
+     * 1. 요청된 ID의 게시물을 시스템에서 영구적으로 제거합니다. <br>
+     * 2. 삭제 성공 시 별도의 응답 본문 없이 {@code 204 No Content} 상태 코드를 반환합니다.
+     *
+     * @param id 삭제할 게시물의 고유 식별자(ID)
+     * @return {@code 204 No Content} 응답
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+
+        postService.deletePost(id);
+
+        return ResponseEntity.noContent().build();
+    }
 }
