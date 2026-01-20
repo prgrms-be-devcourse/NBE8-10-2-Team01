@@ -146,4 +146,60 @@ class MemberServiceTest {
         then(member).shouldHaveNoInteractions(); // member는 조회 자체가 안 됐으니 상호작용 없어야 정상
     }
 
+    @Test
+    void isDuplicateEmail_true() {
+        // given
+        String email = "example@email.com";
+        given(memberRepository.existsByEmail(email)).willReturn(true);
+
+        // when
+        boolean result = memberService.isDuplicateEmail(email);
+
+        // then
+        assertThat(result).isTrue();
+        then(memberRepository).should(times(1)).existsByEmail(email);
+    }
+
+    @Test
+    void isDuplicateEmail_false() {
+        // given
+        String email = "example@email.com";
+        given(memberRepository.existsByEmail(email)).willReturn(false);
+
+        // when
+        boolean result = memberService.isDuplicateEmail(email);
+
+        // then
+        assertThat(result).isFalse();
+        then(memberRepository).should(times(1)).existsByEmail(email);
+    }
+
+    @Test
+    void isDuplicateNickname_true() {
+        // given
+        String nickname = "jack";
+        given(memberRepository.existsByNickname(nickname)).willReturn(true);
+
+        // when
+        boolean result = memberService.isDuplicateNickname(nickname);
+
+        // then
+        assertThat(result).isTrue();
+        then(memberRepository).should(times(1)).existsByNickname(nickname);
+    }
+
+    @Test
+    void isDuplicateNickname_false() {
+        // given
+        String nickname = "jack";
+        given(memberRepository.existsByNickname(nickname)).willReturn(false);
+
+        // when
+        boolean result = memberService.isDuplicateNickname(nickname);
+
+        // then
+        assertThat(result).isFalse();
+        then(memberRepository).should(times(1)).existsByNickname(nickname);
+    }
+
 }

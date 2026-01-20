@@ -106,4 +106,88 @@ class MemberControllerTest extends WebMvcTestSupport {
 //        result.andExpect(status().isOk())
 //                .andExpect(hasKey(expected));
 //    }
+
+    @Test
+    void checkDuplicateEmail_true() throws Exception {
+        // given
+        String email = "example@email.com";
+        Boolean duplicated = true;
+
+        Response<Boolean> expected = CommonResponse.success(duplicated);
+        given(memberService.isDuplicateEmail(email)).willReturn(duplicated);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/members/check/email")
+                        .param("email", email)
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(hasKey(expected));
+    }
+
+    @Test
+    void checkDuplicateEmail_false() throws Exception {
+        // given
+        String email = "example@email.com";
+        Boolean duplicated = false;
+
+        Response<Boolean> expected = CommonResponse.success(duplicated);
+        given(memberService.isDuplicateEmail(email)).willReturn(duplicated);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/members/check/email")
+                        .param("email", email)
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(hasKey(expected));
+    }
+
+    @Test
+    void checkDuplicateNickname_true() throws Exception {
+        // given
+        String nickname = "nickname";
+        Boolean duplicated = true;
+
+        Response<Boolean> expected = CommonResponse.success(duplicated);
+        given(memberService.isDuplicateNickname(nickname)).willReturn(duplicated);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/members/check/nickname")
+                        .param("nickname", nickname)
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(hasKey(expected));
+    }
+
+    @Test
+    void checkDuplicateNickname_false() throws Exception {
+        // given
+        String nickname = "nickname";
+        Boolean duplicated = false;
+
+        Response<Boolean> expected = CommonResponse.success(duplicated);
+        given(memberService.isDuplicateNickname(nickname)).willReturn(duplicated);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/members/check/nickname")
+                        .param("nickname", nickname)
+                        .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(hasKey(expected));
+    }
 }
