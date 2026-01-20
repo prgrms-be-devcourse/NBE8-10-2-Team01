@@ -53,6 +53,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    implementation 'io.minio:minio:8.5.7'
 }
 
 // .env 로부터 테스트 환경변수 로드
