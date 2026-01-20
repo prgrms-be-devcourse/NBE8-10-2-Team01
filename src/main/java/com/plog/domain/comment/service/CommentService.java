@@ -1,7 +1,8 @@
-package com.plog.domain.postComment.service;
+package com.plog.domain.comment.service;
 
-import com.plog.domain.postComment.dto.GetPostCommentRes;
-import com.plog.domain.postComment.entity.PostComment;
+import com.plog.domain.comment.dto.CommentCreateReq;
+import com.plog.domain.comment.dto.CommentGetRes;
+import com.plog.domain.comment.entity.Comment;
 
 import java.util.List;
 
@@ -35,7 +36,7 @@ import java.util.List;
  */
 
 
-public interface PostCommentService {
+public interface CommentService {
 
     /**
      * 단일 게시글(Post)에 새로운 댓글 또는 대댓글을 작성한다.
@@ -46,13 +47,12 @@ public interface PostCommentService {
      * </p>
      *
      * @param postId 게시글 식별자
-     * @param content 댓글 내용
-     * @param parentCommentId 부모 댓글 식별자 (대댓글인 경우)
+     * @param req 댓글 내용, 부모 댓글 식별자
      * @return 생성된 댓글의 식별자
      *
      * @throws IllegalArgumentException 게시글 또는 부모 댓글이 존재하지 않을 경우
      */
-    Long createComment(Long postId, String content, Long parentCommentId);
+    Long createComment(Long postId, CommentCreateReq req);
 
     /**
      * 특정 게시글(Post)에 작성된 댓글 목록을 페이징하여 조회한다.
@@ -66,7 +66,7 @@ public interface PostCommentService {
      * @param page 조회할 페이지 번호 (0-based)
      * @return 댓글 목록 응답 DTO 리스트
      */
-    List<GetPostCommentRes> getCommentsByPostId(Long postId, int page);
+    List<CommentGetRes> getCommentsByPostId(Long postId, int page);
 
     /**
      * 이미 작성된 댓글(Comment)의 내용을 수정한다.
@@ -82,14 +82,14 @@ public interface PostCommentService {
      *
      * @throws IllegalArgumentException 댓글이 존재하지 않을 경우
      */
-    PostComment updateComment(Long commentId, String content);
+    Comment updateComment(Long commentId, String content);
 
     /**
      * 댓글(Comment)을 삭제 처리한다.
      *
      * <p>
-     * 실제 물리 삭제가 아닌 소프트 삭제 여부는
-     * 구현체의 정책에 따라 결정된다.
+     * 대댓글의 대댓글의 기능은 구현하지 않았다.
+     * 현재 댓글의 자식 댓글이 있는 경우에만 소프트 삭제를 기능하도록 하였다.
      * </p>
      *
      * @param commentId 삭제할 댓글 식별자

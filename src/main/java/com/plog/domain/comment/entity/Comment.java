@@ -1,4 +1,4 @@
-package com.plog.domain.postComment.entity;
+package com.plog.domain.comment.entity;
 
 import com.plog.domain.post.entity.Post;
 import com.plog.global.jpa.entity.BaseEntity;
@@ -34,11 +34,11 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class PostComment extends BaseEntity {
+public class Comment extends BaseEntity {
 
-    /*@ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    private Member author;*/
+    private Member author;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -49,35 +49,17 @@ public class PostComment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
-    private PostComment parent;
+    private Comment parent;
 
     @Column(nullable = false)
-    private int depth;
-
-    @Column(nullable = false)
+    @Builder.Default
     private boolean deleted = false;
-
-   /* public static PostComment create(
-            Post post,
-            String content,
-            PostComment parent
-    ) {
-        PostComment comment = new PostComment();
-        //comment.author = author;
-        comment.post = post;
-        comment.content = content;
-        comment.parent = parent;
-        comment.depth = parent == null ? 0 : parent.depth + 1;
-        comment.deleted = false;
-
-        return comment;
-    }*/
 
     public void modify(String content){
         this.content = content;
     }
 
-    public void delete(){
+    public void softDelete(){
         this.deleted = true;
         this.content = "[삭제된 댓글입니다.]";
     }

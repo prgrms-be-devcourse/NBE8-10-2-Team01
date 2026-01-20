@@ -1,4 +1,4 @@
-package com.plog.domain.postComment.dto;
+package com.plog.domain.comment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -30,7 +30,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author njwwn
  * @since 2026-01-19
  */
-public record UpdatePostCommentReq(
+public record UpdateCommentReq(
         @NotBlank(message = "내용을 입력해주세요.")
         String content
 ) {}
