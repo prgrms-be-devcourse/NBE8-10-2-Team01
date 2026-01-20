@@ -17,6 +17,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -112,5 +114,29 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].title").value("제목2"))
                 .andExpect(jsonPath("$.message").value("게시글 목록 조회 성공"));
+    }
+
+    @Test
+    @DisplayName("게시글 수정 요청 시 성공 메시지와 함께 200 OK를 반환한다")
+    void updatePostApiSuccess() throws Exception {
+        // [When]
+        ResultActions resultActions = mvc.perform(
+                patch("/api/posts/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "title": "수정 제목",
+                                    "content": "수정 본문"
+                                }
+                                """)
+        ).andDo(print());
+
+        // [Then]
+        resultActions
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$").doesNotExist());
+
+        // 서비스의 updatePost 메서드가 올바른 파라미터로 호출되었는지 검증
+        verify(postService).updatePost(eq(1L), eq("수정 제목"), eq("수정 본문"));
     }
 }

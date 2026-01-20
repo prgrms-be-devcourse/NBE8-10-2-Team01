@@ -74,6 +74,19 @@ public class PostServiceImpl implements PostService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional
+    public void updatePost(Long id, String title, String content) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
+                        "[PostServiceImpl#updatePost] can't find post", "존재하지 않는 게시물입니다."));
+
+        String plainText = extractPlainText(content);
+        String summary = extractSummary(plainText);
+
+        post.update(title, content, summary);
+    }
+
     /**
      * 마크다운 텍스트에서 특수기호를 제거하고 순수 텍스트만 추출합니다.
      * * @param markdown 마크다운 원문

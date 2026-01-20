@@ -2,6 +2,7 @@ package com.plog.domain.post.controller;
 
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.service.PostService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.response.Response;
@@ -76,5 +77,27 @@ public class PostController {
     public ResponseEntity<Response<List<PostInfoRes>>> getPosts() {
         List<PostInfoRes> posts = postService.getPosts();
         return ResponseEntity.ok(CommonResponse.success(posts, "게시글 목록 조회 성공"));
+    }
+
+    /**
+     * 기존 게시물의 제목과 본문을 수정합니다.
+     *
+     * <p><b>처리 프로세스:</b><br>
+     * 1. 요청된 ID로 게시물을 찾아 제목과 본문을 업데이트합니다. <br>
+     * 2. 수정된 본문을 바탕으로 요약본(Summary)을 자동으로 재생성하여 저장합니다. <br>
+     * 3. 성공 시 별도의 응답 본문 없이 {@code 204 No Content} 상태 코드를 반환합니다.
+     *
+     * @param id      수정할 게시물의 고유 식별자(ID)
+     * @param request 수정할 제목과 본문 정보({@link PostUpdateReq})
+     * @return {@code 204 No Content} 응답
+     */
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updatePost(
+            @PathVariable Long id,
+            @Valid @RequestBody PostUpdateReq request) {
+
+        postService.updatePost(id, request.title(), request.content());
+
+        return ResponseEntity.noContent().build();
     }
 }
