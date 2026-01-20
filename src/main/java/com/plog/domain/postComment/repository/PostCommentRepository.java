@@ -1,7 +1,11 @@
 package com.plog.domain.postComment.repository;
 
 import com.plog.domain.postComment.entity.PostComment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
 
 /**
  * <p>
@@ -12,9 +16,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * <p><b>주요 기능:</b></p>
  * <ul>
- *   <li>댓글 단건 조회 및 전체 조회</li>
+ *   <li>댓글 다건 조회 + 페이징 기능</li>
  *   <li>댓글 저장 및 삭제</li>
- *   <li>댓글 수정(Dirty Checking 기반)</li>
+ *   <li>댓글 수정</li>
  * </ul>
  *
  * @author 노정원
@@ -23,4 +27,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @see JpaRepository
  */
 public interface PostCommentRepository extends JpaRepository<PostComment, Long>{
+
+    Page<PostComment> findAllByPostId(Long postId, Pageable pageable);
 }
