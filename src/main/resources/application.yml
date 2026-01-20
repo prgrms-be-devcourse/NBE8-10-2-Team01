@@ -27,7 +27,7 @@ spring:
         highlight_sql: false
         use_sql_comments: false
 minio:
-  enabled: true
+  enabled: false
   endpoint: http://localhost:9000
   access_key: ${MINIO_ACCESS_KEY}
   secret_key: ${MINIO_SECRET_KEY}
