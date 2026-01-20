@@ -26,6 +26,12 @@ spring:
         format_sql: false
         highlight_sql: false
         use_sql_comments: false
+minio:
+  enabled: false
+  endpoint: http://localhost:9000
+  access_key: ${MINIO_ACCESS_KEY}
+  secret_key: ${MINIO_SECRET_KEY}
+  bucket: team-bucket
 springdoc:
   default-produces-media-type: application/json;charset=UTF-8
 custom:
