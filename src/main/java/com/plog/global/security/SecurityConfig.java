@@ -59,13 +59,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/v1/members/join",
-                                "/api/v1/members/login",
-                                "/api/v1/auth/reissue"
-                        ).permitAll()
-                        // TODO: 모두 허용 -> 이후 수정 필요
-                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers(AccessURL.PUBLIC.getUrls().toArray(String[]::new)).permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(
