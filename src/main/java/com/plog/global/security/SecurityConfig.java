@@ -3,10 +3,14 @@ package com.plog.global.security;
 
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.response.CommonResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,6 +27,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -77,30 +83,8 @@ public class SecurityConfig {
                 .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(
                         exceptionHandling -> exceptionHandling
-                                .authenticationEntryPoint(
-                                        (request, response, authException) -> {
-                                            response.setContentType("application/json;charset=UTF-8");
-
-                                            AuthErrorCode errorCode = (AuthErrorCode) request.getAttribute("exception");
-
-                                            if (errorCode == null) {
-                                                errorCode = AuthErrorCode.LOGIN_REQUIRED;
-                                            }
-                                            response.setStatus(errorCode.getHttpStatus().value());
-
-                                            CommonResponse<Void> errorResponse = CommonResponse.fail(errorCode.getMessage());
-                                            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-                                        }
-                                )
-                                .accessDeniedHandler(
-                                        (request, response, accessDeniedException) -> {
-                                            response.setContentType("application/json;charset=UTF-8");
-
-                                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                                            CommonResponse<Void> errorResponse = CommonResponse.fail(AuthErrorCode.USER_AUTH_FAIL.getMessage());
-                                            response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
-                                        }
-                                )
+                                .authenticationEntryPoint(this::handleAuthEntryPoint)
+                                .accessDeniedHandler(this::handleAccessDenied)
                 );
 
         return http.build();
@@ -111,10 +95,53 @@ public class SecurityConfig {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
+    /**
+     * 인증되지 않은 사용자가 보호된 리소스에 접근했을 때의 처리를 담당합니다.
+     * {@link CustomAuthenticationFilter}에서 설정한 "exception" 속성을 확인하여
+     * JWT 만료, 유효하지 않은 토큰 등의 구체적인 인증 실패 원인을 파악합니다.
+     * <p><b>결과 반환:</b><br>
+     * - 속성이 없을 경우: {@link AuthErrorCode#LOGIN_REQUIRED} (401 Unauthorized) 반환 <br>
+     * - 구체적 에러가 있을 경우: 해당 에러 코드에 맞는 HTTP 상태와 메시지를 JSON 형식으로 반환
+     */
+    private void handleAuthEntryPoint(HttpServletRequest request, HttpServletResponse response,
+                                      AuthenticationException authException) throws IOException, ServletException {
+        response.setContentType("application/json;charset=UTF-8");
+        AuthErrorCode errorCode = (AuthErrorCode) request.getAttribute("exception");
+
+        if (errorCode == null) {
+            errorCode = AuthErrorCode.LOGIN_REQUIRED;
+        }
+
+        response.setStatus(errorCode.getHttpStatus().value());
+        response.getWriter().write(
+                objectMapper.writeValueAsString(
+                        CommonResponse.fail(errorCode.getMessage())));
+    }
+
+    /**
+     * 권한이 없는 사용자가 리소스에 접근했을 때의 처리를 담당합니다.
+     * <p><b>역할:</b><br>
+     * 인가(Authorization) 실패 시 클라이언트에게 권한 부족을 알리는 공통 응답을 생성합니다.
+     * <p><b>결과 반환:</b><br>
+     * HTTP 403 Forbidden 상태 코드와 함께 {@link AuthErrorCode#USER_AUTH_FAIL} 메시지를 JSON으로 반환합니다.
+     */
+    private void handleAccessDenied(HttpServletRequest request, HttpServletResponse response,
+                                    AccessDeniedException accessDeniedException) throws IOException, ServletException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.getWriter().write(
+                objectMapper.writeValueAsString(
+                        CommonResponse.fail(
+                                AuthErrorCode.USER_AUTH_FAIL.getMessage())));
+    }
+
+
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
