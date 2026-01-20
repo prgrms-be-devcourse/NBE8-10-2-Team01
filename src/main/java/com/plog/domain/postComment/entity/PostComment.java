@@ -4,10 +4,7 @@ import com.plog.domain.post.entity.Post;
 import com.plog.global.jpa.entity.BaseEntity;
 import com.plog.domain.member.entity.Member;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * 게시글에 작성되는 댓글(Comment) 및 대댓글(Reply)을 표현하는 엔티티 클래스이다.
@@ -31,15 +28,17 @@ import lombok.Setter;
  * @see Post
  * @see Member
  */
+
 @Getter
-@Setter
 @Entity
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class PostComment extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
-    private Member author;
+    private Member author;*/
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -58,11 +57,13 @@ public class PostComment extends BaseEntity {
     @Column(nullable = false)
     private boolean deleted = false;
 
-    public static PostComment create(
-            Member author, Post post, String content, PostComment parent) {
-
+   /* public static PostComment create(
+            Post post,
+            String content,
+            PostComment parent
+    ) {
         PostComment comment = new PostComment();
-        comment.author = author;
+        //comment.author = author;
         comment.post = post;
         comment.content = content;
         comment.parent = parent;
@@ -70,7 +71,7 @@ public class PostComment extends BaseEntity {
         comment.deleted = false;
 
         return comment;
-    }
+    }*/
 
     public void modify(String content){
         this.content = content;
