@@ -30,7 +30,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author njwwn
  * @since 2026-01-19
  */
-public record UpdateCommentReq(
+public record CommentUpdateReq(
         @NotBlank(message = "내용을 입력해주세요.")
         String content
 ) {}

@@ -1,6 +1,6 @@
 package com.plog.global.exception.exceptions;
 
-import com.plog.global.exception.errorCode.PostCommentErrorCode;
+import com.plog.global.exception.errorCode.CommentErrorCode;
 
 /**
  * 게시글 댓글 도메인에서 발생하는 비즈니스 예외를 처리하는 클래스입니다.
@@ -12,31 +12,31 @@ import com.plog.global.exception.errorCode.PostCommentErrorCode;
  * {@link BaseException}을 상속받는다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@link PostCommentException(PostCommentErrorCode)}  <br>
+ * {@link CommentException ( CommentErrorCode )}  <br>
  * 기본 메시지를 그대로 사용하는 단순 예외 <br>
  *
- * {@link PostCommentException(PostCommentErrorCode, String)}  <br>
+ * {@link CommentException ( CommentErrorCode , String)}  <br>
  * 내부 로그 메시지를 분리하여 기록하고자 할 때 사용 <br>
  *
- * {@link PostCommentException(PostCommentErrorCode, String, String)}  <br>
+ * {@link CommentException ( CommentErrorCode , String, String)}  <br>
  * 클라이언트 응답 메시지를 커스터마이징해야 하는 경우 사용 <br>
  *
  *
  * @author njwwn
  * @see BaseException
- * @see PostCommentErrorCode
+ * @see CommentErrorCode
  * @since 2026-01-20
  */
-public class PostCommentException extends BaseException {
-    public PostCommentException(PostCommentErrorCode errorCode) {
+public class CommentException extends BaseException {
+    public CommentException(CommentErrorCode errorCode) {
         super(errorCode);
     }
 
-    public PostCommentException(PostCommentErrorCode errorCode, String logMessage) {
+    public CommentException(CommentErrorCode errorCode, String logMessage) {
         super(errorCode, logMessage);
     }
 
-    public PostCommentException(PostCommentErrorCode errorCode, String logMessage, String clientMessage) {
+    public CommentException(CommentErrorCode errorCode, String logMessage, String clientMessage) {
         super(errorCode, logMessage, clientMessage);
     }
 }

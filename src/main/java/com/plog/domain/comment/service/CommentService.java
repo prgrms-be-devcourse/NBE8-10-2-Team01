@@ -1,7 +1,7 @@
 package com.plog.domain.comment.service;
 
 import com.plog.domain.comment.dto.CommentCreateReq;
-import com.plog.domain.comment.dto.CommentGetRes;
+import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.entity.Comment;
 
 import java.util.List;
@@ -55,18 +55,17 @@ public interface CommentService {
     Long createComment(Long postId, CommentCreateReq req);
 
     /**
-     * 특정 게시글(Post)에 작성된 댓글 목록을 페이징하여 조회한다.
+     * 특정 게시글(Post)에 작성된 댓글 목록을 조회한다.
+     * 페이징 기능은 작업 중이다.
      *
      * <p>
-     * 댓글과 대댓글을 함께 조회하며,
-     * 페이지 번호는 0부터 시작한다.
+     * 댓글과 대댓글을 함께 조회된다.
      * </p>
      *
      * @param postId 게시글 식별자
-     * @param page 조회할 페이지 번호 (0-based)
      * @return 댓글 목록 응답 DTO 리스트
      */
-    List<CommentGetRes> getCommentsByPostId(Long postId, int page);
+    List<CommentInfoRes> getCommentsByPostId(Long postId);
 
     /**
      * 이미 작성된 댓글(Comment)의 내용을 수정한다.
@@ -82,7 +81,7 @@ public interface CommentService {
      *
      * @throws IllegalArgumentException 댓글이 존재하지 않을 경우
      */
-    Comment updateComment(Long commentId, String content);
+    void updateComment(Long commentId, String content);
 
     /**
      * 댓글(Comment)을 삭제 처리한다.

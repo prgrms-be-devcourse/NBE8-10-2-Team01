@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * </p>
  *
  * <p><b>주요 생성자:</b><br>
- * {@link #GetCommentRes(Comment)} <br>
+ * {@link #CommentInfoRes(Comment)} <br>
  * 댓글 엔티티 {@link Comment}를 기반으로
  * 클라이언트 응답에 필요한 데이터만을 매핑하여 생성한다.
  * </p>
@@ -31,7 +31,7 @@ import java.time.LocalDateTime;
  * @see Comment
  * @since 2026-01-19
  */
-public record GetCommentRes(
+public record CommentInfoRes(
         long id,
         String content,
         long authorId,
@@ -39,7 +39,7 @@ public record GetCommentRes(
         LocalDateTime createDate,
         LocalDateTime modifyDate
 ) {
-    public GetCommentRes(Comment comment){
+    public CommentInfoRes(Comment comment){
         this(
                 comment.getId(),
                 comment.getContent(),

@@ -3,7 +3,7 @@ package com.plog.domain.comment.service;
 import com.plog.domain.comment.dto.CommentCreateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
-import com.plog.domain.comment.dto.CommentGetRes;
+import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.entity.Comment;
 import com.plog.domain.comment.repository.CommentRepository;
 import com.plog.global.exception.errorCode.CommentErrorCode;
@@ -30,8 +30,7 @@ public class CommentServiceImpl implements CommentService {
     public Long createComment(Long postId, CommentCreateReq req){
 
         //TODO: 추후 Post 예외처리 정책으로 수정 예정.
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다."));
+        Post post = postRepository.findById(postId).get();
 
         Comment parentComment = null;
 
@@ -58,24 +57,20 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentGetRes> getCommentsByPostId(Long postId, int page) {
+    public List<CommentInfoRes> getCommentsByPostId(Long postId) {
 
-        int pageSize = 10;
+        //TODO: 페이징 기능과 게시물 예외처리 추가 예정
 
-        // TODO: 추후 postService.findById(postId)로 교체
-        Page<Comment> commentPage = commentRepository.findAllByPostId(
-                postId,
-                PageRequest.of(page, pageSize, Sort.by("createDate").descending()) // 최신 댓글 먼저
-        );
+        List<Comment> comments = commentRepository.findAllByPostIdOrderByCreateDateDesc(postId);
 
-        return commentPage.stream()
-                .map(CommentGetRes::new)
+        return comments.stream()
+                .map(CommentInfoRes::new)
                 .toList();
     }
 
     @Override
     @Transactional
-    public Comment updateComment(Long commentId, String content) {
+    public void updateComment(Long commentId, String content) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentException(
                         CommentErrorCode.COMMENT_NOT_FOUND,
@@ -84,8 +79,6 @@ public class CommentServiceImpl implements CommentService {
                 ));
 
         comment.modify(content);
-
-        return comment;
     }
 
     @Override

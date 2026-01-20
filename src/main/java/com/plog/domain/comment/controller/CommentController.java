@@ -1,7 +1,7 @@
 package com.plog.domain.comment.controller;
 
 import com.plog.domain.comment.dto.CommentCreateReq;
-import com.plog.domain.comment.dto.CommentGetRes;
+import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.dto.CommentUpdateReq;
 import com.plog.domain.comment.entity.Comment;
 import com.plog.domain.comment.service.CommentService;
@@ -57,41 +57,36 @@ public class CommentController {
     private final CommentService commentService;
 
     @GetMapping
-    public ResponseEntity<Response<List<CommentGetRes>>> getComments(
-            @PathVariable Long postId,
-            @RequestParam(defaultValue = "0", name = "page") int page
+    public ResponseEntity<Response<List<CommentInfoRes>>> getComments(
+            @PathVariable Long postId
     ) {
-        List<CommentGetRes> responseList = commentService.getCommentsByPostId(postId, page);
+        List<CommentInfoRes> commentList = commentService.getCommentsByPostId(postId);
 
-        return ResponseEntity.ok(CommonResponse.success(responseList, "댓글 조회 성공"));
+        return ResponseEntity.ok(CommonResponse.success(commentList, "댓글 조회 성공"));
     }
 
 
     @PostMapping("/post/{postId}/comments")
-    public ResponseEntity<Response<Long>> createComment(
+    public ResponseEntity<Void> createComment(
             @PathVariable Long postId,
             @Valid @RequestBody CommentCreateReq req
             ){
 
         Long commentId = commentService.createComment(postId, req);
 
-        CommonResponse<Long> response = CommonResponse.success(commentId, "댓글 작성 완료");
-
         return ResponseEntity
                 .created(URI.create("/api/posts/" + postId + "/comments/" + commentId))
-                .body(response);
+                .build();
     }
 
     @PutMapping("/comments/{commetId}")
-    public ResponseEntity<CommonResponse<Long>> updateComment(
+    public ResponseEntity<Void> updateComment(
             @PathVariable Long commentId,
             @RequestBody @Valid CommentUpdateReq req
     ){
-        Comment updated = commentService.updateComment(commentId, req.content());
+        commentService.updateComment(commentId, req.content());
 
-        return ResponseEntity.ok(
-                CommonResponse.success(updated.getId(), "댓글 수정 완료")
-        );
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/comments/{commentId}")
