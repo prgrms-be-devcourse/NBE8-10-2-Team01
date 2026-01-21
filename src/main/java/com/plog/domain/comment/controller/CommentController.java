@@ -128,9 +128,9 @@ public class CommentController {
      * @param req 수정될 댓글의 내용
      * @return 댓글 수정 성공의 상태 코드
      */
-    @PutMapping("/comments/{commetId}")
+    @PutMapping("/comments/{commentId}")
     public ResponseEntity<Void> updateComment(
-            @PathVariable Long commentId,
+            @PathVariable("commentId") Long commentId,
             @RequestBody @Valid CommentUpdateReq req
     ){
         commentService.updateComment(commentId, req.content());
