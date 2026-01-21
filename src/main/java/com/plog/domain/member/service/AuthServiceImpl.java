@@ -6,6 +6,8 @@ import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.security.JwtUtils;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -85,6 +87,32 @@ public class AuthServiceImpl implements AuthService {
         Member member = findByEmail(email);
         checkPassword(member, password);
         return member;
+    }
+
+    @Override
+    public String accessTokenReissue(String refreshToken) {
+        if (refreshToken == null) {
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+
+        try {
+            Claims claims = jwtUtils.parseToken(refreshToken);
+            Long memberId = claims.get("id", Long.class);
+            Member member = findById(memberId);
+
+            // TODO: 멤버와 토큰을 둘 다 반환하는 게 좋을 것 같다
+            return genAccessToken(member);
+        } catch (ExpiredJwtException e) {
+            // TODO: 수정 필요
+            throw new AuthException(AuthErrorCode.LOGIN_REQUIRED, "Refresh Token 만료", "세션이 만료되었습니다. 다시 로그인해 주세요.");
+        } catch (Exception e) {
+            throw new AuthException(AuthErrorCode.TOKEN_INVALID);
+        }
+    }
+
+    private Member findById(Long id) {
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_CREDENTIALS));
     }
 
     private Member findByEmail(String email) {

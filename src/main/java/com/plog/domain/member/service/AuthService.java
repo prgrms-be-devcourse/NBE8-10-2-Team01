@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2026-01-15
  */
 
-// TODO: service 바로 쓰지 말고 implement로 만들기
 // TODO: 주석 더 자세히 적기
 
 @Service
@@ -45,4 +44,6 @@ public interface AuthService {
 
     /** 로그인 로직 */
     Member signIn(String email, String password);
+
+    String accessTokenReissue(String refreshToken);
 }

@@ -124,8 +124,23 @@ public class AuthController {
     }
 
     @GetMapping("/logout")
-    public void logout() {}
+    public ResponseEntity<CommonResponse<Void>> logout() {
+        rq.deleteCookie("apiKey");
+        return ResponseEntity.ok(
+                CommonResponse.success(null, "로그아웃 되었습니다.")
+        );
+    }
 
     @GetMapping("/reissue")
-    public void accessTokenReissue() {}
+    public ResponseEntity<CommonResponse<MemberSignInRes>> accessTokenReissue() {
+        String refreshToken = rq.getCookieValue("apiKey", null);
+        String newAccessToken = authService.accessTokenReissue(refreshToken);
+        rq.setHeader("Authorization", newAccessToken);
+
+        // TODO: 멤버, 토큰 둘 다 반환 받은 후, nickname 부분 변경하기
+        MemberSignInRes res = new MemberSignInRes("reissued", newAccessToken);
+        return ResponseEntity.ok(
+                CommonResponse.success(res, "토큰이 재발급되었습니다.")
+        );
+    }
 }
