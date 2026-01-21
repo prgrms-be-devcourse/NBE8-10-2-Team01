@@ -5,6 +5,7 @@ import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.security.JwtUtils;
+import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,8 @@ class AuthServiceTest {
     private MemberRepository memberRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtUtils jwtUtils;
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -81,9 +84,6 @@ class AuthServiceTest {
         then(memberRepository).should(times(1)).findByEmail(email);
         then(memberRepository).should(times(0)).save(any(Member.class));
     }
-
-    @Mock
-    private JwtUtils jwtUtils; // JwtUtils 모킹 추가
 
     @Test
     @DisplayName("로그인 성공 - 회원 정보 반환")
@@ -148,5 +148,61 @@ class AuthServiceTest {
         then(jwtUtils).should(times(1)).createAccessToken(anyMap());
     }
 
+    @Test
+    @DisplayName("토큰 재발급 성공 - 리프레시 토큰이 유효하면 새 AccessToken 발급")
+    void accessTokenReissue_success() {
+        // given
+        String refreshToken = "valid-refresh-token";
+        Long memberId = 1L;
+        Member mockMember = mock(Member.class);
+        Claims mockClaims = mock(Claims.class);
 
+        given(jwtUtils.parseToken(refreshToken)).willReturn(mockClaims);
+        given(mockClaims.get("id", Long.class)).willReturn(memberId);
+        given(memberRepository.findById(memberId)).willReturn(Optional.of(mockMember));
+
+        // genAccessToken 내부 로직 모킹
+        given(mockMember.getId()).willReturn(memberId);
+        given(mockMember.getEmail()).willReturn("test@plog.com");
+        given(mockMember.getNickname()).willReturn("nick");
+        given(jwtUtils.createAccessToken(anyMap())).willReturn("new-access-token");
+
+        // when
+        String resultToken = authService.accessTokenReissue(refreshToken);
+
+        // then
+        assertThat(resultToken).isEqualTo("new-access-token");
+        then(jwtUtils).should(times(1)).parseToken(refreshToken);
+        then(memberRepository).should(times(1)).findById(memberId);
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 실패 - 리프레시 토큰 만료 시 LOGIN_REQUIRED 예외 발생")
+    void accessTokenReissue_fail_expired() {
+        // given
+        String expiredToken = "expired-token";
+        // parseToken 호출 시 ExpiredJwtException이 발생하도록 설정
+        given(jwtUtils.parseToken(expiredToken)).willThrow(
+                new io.jsonwebtoken.ExpiredJwtException(null, null, "token expired")
+        );
+
+        // when
+        AuthException ex = assertThrows(AuthException.class,
+                () -> authService.accessTokenReissue(expiredToken));
+
+        // then
+        assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.LOGIN_REQUIRED);
+        assertThat(ex.getMessage()).isEqualTo("세션이 만료되었습니다. 다시 로그인해 주세요.");
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 실패 - 토큰이 null이면 TOKEN_INVALID 예외 발생")
+    void accessTokenReissue_fail_nullToken() {
+        // when
+        AuthException ex = assertThrows(AuthException.class,
+                () -> authService.accessTokenReissue(null));
+
+        // then
+        assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.TOKEN_INVALID);
+    }
 }

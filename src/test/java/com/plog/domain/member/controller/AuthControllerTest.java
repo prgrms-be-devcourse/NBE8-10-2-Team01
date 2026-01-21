@@ -13,10 +13,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -127,5 +127,45 @@ public class AuthControllerTest extends WebMvcTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("로그아웃 성공 - 200, 쿠키 삭제 확인")
+    void logout_success() throws Exception {
+        // when
+        ResultActions result = mockMvc.perform(get("/api/members/logout")
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("로그아웃 되었습니다."));
+
+        // Rq를 통해 쿠키가 삭제되었는지 검증
+        verify(rq).deleteCookie("apiKey");
+    }
+
+    @Test
+    @DisplayName("토큰 재발급 성공 - 200, 새 AccessToken 반환")
+    void accessTokenReissue_success() throws Exception {
+        // given
+        String refreshToken = "mock-refresh-token";
+        String newAccessToken = "new-access-token";
+
+        given(rq.getCookieValue(eq("apiKey"), any())).willReturn(refreshToken);
+        given(authService.accessTokenReissue(refreshToken)).willReturn(newAccessToken);
+
+        // when
+        ResultActions result = mockMvc.perform(get("/api/members/reissue")
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.accessToken").value(newAccessToken))
+                .andExpect(jsonPath("$.data.nickname").value("reissued"));
+
+        // 헤더에 새 토큰이 설정되었는지 검증
+        verify(rq).setHeader("Authorization", newAccessToken);
     }
 }
