@@ -1,6 +1,7 @@
 package com.plog.domain.member.service;
 
 
+import com.plog.domain.member.dto.AuthSignInRes;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
@@ -90,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String accessTokenReissue(String refreshToken) {
+    public AuthSignInRes accessTokenReissue(String refreshToken) {
         if (refreshToken == null) {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
@@ -99,9 +100,9 @@ public class AuthServiceImpl implements AuthService {
             Claims claims = jwtUtils.parseToken(refreshToken);
             Long memberId = claims.get("id", Long.class);
             Member member = findById(memberId);
+            String newAccessToken = genAccessToken(member);
+            return new AuthSignInRes(member.getNickname(), newAccessToken);
 
-            // TODO: 멤버와 토큰을 둘 다 반환하는 게 좋을 것 같다
-            return genAccessToken(member);
         } catch (ExpiredJwtException e) {
             // TODO: 수정 필요
             throw new AuthException(AuthErrorCode.LOGIN_REQUIRED, "Refresh Token 만료", "세션이 만료되었습니다. 다시 로그인해 주세요.");

@@ -1,6 +1,7 @@
 package com.plog.domain.member.service;
 
 
+import com.plog.domain.member.dto.AuthSignInRes;
 import com.plog.domain.member.entity.Member;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,5 +46,5 @@ public interface AuthService {
     /** 로그인 로직 */
     Member signIn(String email, String password);
 
-    String accessTokenReissue(String refreshToken);
+    AuthSignInRes accessTokenReissue(String refreshToken);
 }

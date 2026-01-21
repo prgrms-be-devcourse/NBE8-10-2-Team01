@@ -1,5 +1,6 @@
 package com.plog.domain.member.service;
 
+import com.plog.domain.member.dto.AuthSignInRes;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
@@ -153,25 +154,34 @@ class AuthServiceTest {
     void accessTokenReissue_success() {
         // given
         String refreshToken = "valid-refresh-token";
+        String newAccessToken = "new-access-token";
+        String nickname = "nick";
         Long memberId = 1L;
+
+        // Mock 객체 설정
         Member mockMember = mock(Member.class);
         Claims mockClaims = mock(Claims.class);
 
+        // 1. 토큰 파싱 및 클레임 추출 모킹
         given(jwtUtils.parseToken(refreshToken)).willReturn(mockClaims);
         given(mockClaims.get("id", Long.class)).willReturn(memberId);
+
         given(memberRepository.findById(memberId)).willReturn(Optional.of(mockMember));
 
-        // genAccessToken 내부 로직 모킹
         given(mockMember.getId()).willReturn(memberId);
         given(mockMember.getEmail()).willReturn("test@plog.com");
-        given(mockMember.getNickname()).willReturn("nick");
-        given(jwtUtils.createAccessToken(anyMap())).willReturn("new-access-token");
+        given(mockMember.getNickname()).willReturn(nickname);
+
+        given(jwtUtils.createAccessToken(anyMap())).willReturn(newAccessToken);
 
         // when
-        String resultToken = authService.accessTokenReissue(refreshToken);
+        AuthSignInRes result = authService.accessTokenReissue(refreshToken);
 
         // then
-        assertThat(resultToken).isEqualTo("new-access-token");
+        assertThat(result).isNotNull();
+        assertThat(result.nickname()).isEqualTo(nickname);
+        assertThat(result.accessToken()).isEqualTo(newAccessToken);
+
         then(jwtUtils).should(times(1)).parseToken(refreshToken);
         then(memberRepository).should(times(1)).findById(memberId);
     }

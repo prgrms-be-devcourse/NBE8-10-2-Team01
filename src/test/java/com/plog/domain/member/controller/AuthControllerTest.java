@@ -1,6 +1,9 @@
 package com.plog.domain.member.controller;
 
 
+import com.plog.domain.member.dto.AuthSignInReq;
+import com.plog.domain.member.dto.AuthSignInRes;
+import com.plog.domain.member.dto.AuthSignUpReq;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.service.AuthService;
 import com.plog.global.rq.Rq;
@@ -42,7 +45,7 @@ public class AuthControllerTest extends WebMvcTestSupport {
     void signUp_success() throws Exception {
         // given
         Long memberId = 1L;
-        AuthController.MemberSignUpReq req = new AuthController.MemberSignUpReq(
+        AuthSignUpReq req = new AuthSignUpReq(
                 "test@plog.com",
                 "password123!",
                 "plogger"
@@ -64,7 +67,7 @@ public class AuthControllerTest extends WebMvcTestSupport {
     @DisplayName("회원가입 실패 - 이메일 형식 올바르지 않음, 400 에러 반환.")
     void signUp_fail_invalidEmail() throws Exception {
         // given
-        AuthController.MemberSignUpReq req = new AuthController.MemberSignUpReq(
+        AuthSignUpReq req = new AuthSignUpReq(
                 "invalid-email",
                 "password123!",
                 "plogg"
@@ -94,7 +97,7 @@ public class AuthControllerTest extends WebMvcTestSupport {
                 .nickname(nickname)
                 .build();
 
-        AuthController.MemberSignInReq req = new AuthController.MemberSignInReq(email, password);
+        AuthSignInReq req = new AuthSignInReq(email, password);
 
         given(authService.signIn(anyString(), anyString())).willReturn(mockMember);
         given(authService.genAccessToken(any(Member.class))).willReturn(accessToken);
@@ -120,7 +123,7 @@ public class AuthControllerTest extends WebMvcTestSupport {
     @DisplayName("로그인 실패 - 이메일 공백, 400 에러 반환")
     void signIn_fail_emptyEmail() throws Exception {
         // given
-        AuthController.MemberSignInReq req = new AuthController.MemberSignInReq("", "password123!");
+        AuthSignInReq req = new AuthSignInReq("", "password123!");
 
         // when & then
         mockMvc.perform(post("/api/members/sign-in")
@@ -151,9 +154,12 @@ public class AuthControllerTest extends WebMvcTestSupport {
         // given
         String refreshToken = "mock-refresh-token";
         String newAccessToken = "new-access-token";
+        String nickname = "nick";
+
+        AuthSignInRes resDto = new AuthSignInRes(nickname, newAccessToken);
 
         given(rq.getCookieValue(eq("apiKey"), any())).willReturn(refreshToken);
-        given(authService.accessTokenReissue(refreshToken)).willReturn(newAccessToken);
+        given(authService.accessTokenReissue(refreshToken)).willReturn(resDto);
 
         // when
         ResultActions result = mockMvc.perform(get("/api/members/reissue")
@@ -162,8 +168,9 @@ public class AuthControllerTest extends WebMvcTestSupport {
         // then
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("토큰이 재발급되었습니다."))
                 .andExpect(jsonPath("$.data.accessToken").value(newAccessToken))
-                .andExpect(jsonPath("$.data.nickname").value("reissued"));
+                .andExpect(jsonPath("$.data.nickname").value(nickname));
 
         // 헤더에 새 토큰이 설정되었는지 검증
         verify(rq).setHeader("Authorization", newAccessToken);
