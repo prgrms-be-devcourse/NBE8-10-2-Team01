@@ -57,8 +57,6 @@ import java.net.URI;
 public class CommentController {
     private final CommentService commentService;
 
-
-
     /**
      * 해당 게시물의 루트 댓글들을 최대 10개씩 조회합니다.
      *
@@ -144,10 +142,10 @@ public class CommentController {
      * @param commentId 삭제할 댓글의 식별자
      * @return 해당 댓글 식별자와 댓글 삭제 완료 메시지
      */
-    @DeleteMapping("/comments/{commentId}")
+    @DeleteMapping("/posts/comments/{commentId}")
     public ResponseEntity<CommonResponse<Long>> deleteComment(
             @PathVariable Long commentId
-    ){
+    ) {
         commentService.deleteComment(commentId);
 
         return ResponseEntity.ok(
