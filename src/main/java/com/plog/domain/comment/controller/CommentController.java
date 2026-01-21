@@ -86,7 +86,7 @@ public class CommentController {
      * @param pageable 페이징(Paging)과 정렬(Sorting)의 '기본값'을 설정하는 설정값
      * @return 페이징된 대댓글 정보와 조회 성공 메시지.
      */
-    @GetMapping({"posts/comments/{commentId}/replies"})
+    @GetMapping({"/comments/{commentId}/replies"})
     public ResponseEntity<Response<Slice<ReplyInfoRes>>> getReplies(
             @PathVariable Long commentId,
             @PageableDefault(size = CommentConstants.REPLY_PAGE_SIZE,
@@ -142,7 +142,7 @@ public class CommentController {
      * @param commentId 삭제할 댓글의 식별자
      * @return 해당 댓글 식별자와 댓글 삭제 완료 메시지
      */
-    @DeleteMapping("/posts/comments/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public ResponseEntity<CommonResponse<Long>> deleteComment(
             @PathVariable Long commentId
     ) {

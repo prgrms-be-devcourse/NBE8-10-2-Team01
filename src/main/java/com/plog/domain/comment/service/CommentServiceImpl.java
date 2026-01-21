@@ -76,13 +76,10 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, Pageable pageable) {
 
-        if (!commentRepository.existsById(commentId)) {
-            throw new CommentException(
-                    CommentErrorCode.COMMENT_NOT_FOUND,
-                    "[CommentService#getRepliesByCommentId] 부모 댓글이 존재하지 않음: " + commentId,
-                    "존재하지 않는 댓글입니다."
-            );
-        }
+        Comment parent = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND,
+                        "[CommentService#getRepliesByCommentId] 부모 댓글이 존재하지 않음: " + commentId,
+                        "존재하지 않는 댓글입니다."));
 
         Slice<Comment> replies = commentRepository.findByParentId(commentId, pageable);
 
