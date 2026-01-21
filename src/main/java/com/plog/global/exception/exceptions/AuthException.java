@@ -15,7 +15,7 @@ import com.plog.global.exception.errorCode.AuthErrorCode;
  * AuthErrorCode만 매개변수로 받도록 강제합니다. 내부 로그 메시지를 담지 않는 예외를 생성합니다. <br>
  * {@code AuthException(AuthErrorCode errorCode, String clientMessage)} <br>
  * AuthErrorCode만 매개변수로 받도록 강제합니다. 내부 로그 메시지를 담는 예외를 생성합니다. <br>
- * {@code AuthException(AuthErrorCode errorCode, String clientMessage, String logMessage)} <br>
+ * {@code AuthException(AuthErrorCode errorCode, String logMessage, String clientMessage)} <br>
  * AuthErrorCode만 매개변수로 받도록 강제합니다. 클라이언트로의 메시지 및 내부 로그 메시지를 담는 예외를 생성합니다. <br>
  *
  * @author jack8
@@ -33,7 +33,7 @@ public class AuthException extends BaseException {
         super(errorCode, logMessage);
     }
 
-    public AuthException(AuthErrorCode errorCode, String clientMessage, String logMessage) {
-        super(errorCode, clientMessage, logMessage);
+    public AuthException(AuthErrorCode errorCode, String logMessage, String clientMessage) {
+        super(errorCode, logMessage, clientMessage);
     }
 }
