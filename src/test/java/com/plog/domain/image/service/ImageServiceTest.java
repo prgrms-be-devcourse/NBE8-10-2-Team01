@@ -15,7 +15,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,27 +26,26 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * ImageService의 비즈니스 로직을 검증하는 단위 테스트(Unit Test)입니다.
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ * 스프링 컨텍스트를 로드하지 않고({@code @SpringBootTest} 제외),
+ * {@code @ExtendWith(MockitoExtension.class)}를 사용하여 가볍고 빠르게 동작합니다.
+ * 외부 의존성(MinIO 스토리지, DB Repository)은 Mock 객체로 대체하여,
+ * 순수하게 서비스 계층의 파일명 변환 로직, 확장자 검사, 예외 처리 등을 검증합니다.
  *
- * <p><b>상속 정보:</b><br>
- * 상속 정보를 적습니다.
+ * <p><b>테스트 환경:</b><br>
+ * JUnit 5, Mockito, AssertJ 사용
  *
- * <p><b>주요 생성자:</b><br>
- * {@code imageServiceTest(String example)} <br>
- * 주요 생성자와 그 매개변수에 대한 설명을 적습니다. <br>
- *
- * <p><b>빈 관리:</b><br>
- * 필요 시 빈 관리에 대한 내용을 적습니다.
- *
- * <p><b>외부 모듈:</b><br>
- * 필요 시 외부 모듈에 대한 내용을 적습니다.
+ * <p><b>주요 검증 포인트:</b><br>
+ * 1. 파일 업로드 시 UUID 기반 파일명 생성 여부 확인 <br>
+ * 2. 지원하지 않는 파일 확장자 및 빈 파일에 대한 예외 처리 검증 <br>
+ * 3. 다중 파일 업로드 시 반복 호출 로직 검증
  *
  * @author Jaewon Ryu
- * @see
- * @since 2026-01-20
+ * @see ImageServiceImpl
+ * @since 2026-01-21
  */
+
 @ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 public class ImageServiceTest {

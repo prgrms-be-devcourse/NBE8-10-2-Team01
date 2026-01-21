@@ -14,22 +14,26 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * 이미지 업로드 및 메타데이터 관리를 담당하는 서비스 구현체입니다.
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ * {@link ImageService} 인터페이스를 구현하여 실제 비즈니스 로직을 수행합니다.
+ * {@link ObjectStorage}를 통해 물리적 파일을 저장하고, {@link ImageRepository}를 통해 DB에 메타데이터를 저장합니다.
+ * 모든 업로드 작업은 {@code @Transactional} 안에서 원자적으로 수행됩니다.
  *
  * <p><b>상속 정보:</b><br>
- * 상속 정보를 적습니다.
+ * {@link ImageService} 인터페이스를 구현합니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code ImageServiceImpl(String example)} <br>
- * 주요 생성자와 그 매개변수에 대한 설명을 적습니다. <br>
+ * {@code ImageServiceImpl(ObjectStorage objectStorage, ImageRepository imageRepository)} <br>
+ * 롬복의 {@code @RequiredArgsConstructor}를 통해 필요한 의존성을 주입받습니다. <br>
  *
  * <p><b>빈 관리:</b><br>
- * 필요 시 빈 관리에 대한 내용을 적습니다.
+ * {@code @Service} 어노테이션을 통해 스프링 빈으로 등록됩니다. <br>
+ * 클래스 레벨에는 적용되지 않았으나, 메서드 레벨에서 {@code @Transactional}을 통해 트랜잭션을 관리합니다.
  *
  * <p><b>외부 모듈:</b><br>
- * 필요 시 외부 모듈에 대한 내용을 적습니다.
+ * {@code ObjectStorage}: 추상화된 파일 저장소 인터페이스를 사용합니다 (구현체: MinioStorage). <br>
+ * {@code ImageRepository}: JPA를 통해 DB와 통신합니다.
  *
  * @author Jaewon Ryu
  * @see
@@ -47,13 +51,21 @@ public class ImageServiceImpl implements ImageService {
     @Transactional
     public String uploadImage(MultipartFile file) {
         if (file.isEmpty() || file.getOriginalFilename() == null) {
-            throw new ImageException(ImageErrorCode.EMPTY_FILE);
+            throw new ImageException(
+                    ImageErrorCode.EMPTY_FILE,
+                    "[ImageServiceImpl#uploadImage] file is empty or filename is null",
+                    "이미지 파일이 비어있거나 잘못된 요청입니다."
+            );
         }
         String originalFileName = file.getOriginalFilename();
         String storedFileName = createStoredFileName(originalFileName);
 
         if (!isValidExtension(originalFileName)) {
-            throw new ImageException(ImageErrorCode.INVALID_FILE_EXTENSION);
+            throw new ImageException(
+                    ImageErrorCode.INVALID_FILE_EXTENSION,
+                    "[ImageServiceImpl#uploadImage] invalid file extension request: " + originalFileName,
+                    "지원하지 않는 파일 형식입니다. (jpg, jpeg, png, gif만 가능)"
+            );
         }
 
         String accessUrl = objectStorage.upload(file, storedFileName);

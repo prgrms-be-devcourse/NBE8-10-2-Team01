@@ -6,20 +6,25 @@ import jakarta.persistence.*;
 import lombok.*;
 
 /**
- * 게시글에 포함되는 이미지 파일의 메타데이터를 관리하는 엔티티입니다.
+ * 게시글에 첨부되는 이미지 파일의 메타데이터를 관리하는 JPA 엔티티입니다.
  * <p>
- * 원본 파일명, S3/MinIO에 저장된 실제 키 값(storedName), 그리고 접근 가능한 URL을 저장합니다.
- * 추후 게시글 삭제 시, 연관된 이미지를 찾아 스토리지에서도 삭제하기 위한 기준 정보가 됩니다.
+ * 물리적 파일은 Object Storage(MinIO/S3)에 저장하고, DB에는 해당 파일의
+ * 원본명, 저장된 키 값(Stored Name), 접근 URL 등 메타데이터만 보관합니다.
+ * 게시글과 다대일(N:1) 관계를 맺으며, 게시글 삭제 시 고아 객체 제거 로직 등의 기준이 됩니다.
  *
  * <p><b>상속 정보:</b><br>
- * {@link BaseEntity}를 상속받아 생성/수정 시간을 관리합니다.
+ * {@link BaseEntity}를 상속받아 생성일시(createdAt)와 수정일시(updatedAt)를 자동으로 관리합니다.
+ *
+ * <p><b>생명주기 관리:</b><br>
+ * 스프링 빈이 아니며, JPA 영속성 컨텍스트(Persistence Context)에 의해 생명주기가 관리됩니다.
  *
  * <p><b>주요 패턴:</b><br>
- * {@code @Builder}를 사용하여 객체 생성을 유연하게 처리합니다.
+ * {@code @Builder}를 통해 객체 생성 시 가독성을 높이고,
+ * {@code @NoArgsConstructor(access = AccessLevel.PROTECTED)}로 무분별한 기본 생성자 호출을 방지합니다.
  *
  * @author Jaewon Ryu
  * @since 2026-01-20
- * @see Post
+ * @see
  */
 @Entity
 @Getter

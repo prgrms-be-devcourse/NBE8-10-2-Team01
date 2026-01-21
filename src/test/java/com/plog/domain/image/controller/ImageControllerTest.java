@@ -1,6 +1,5 @@
 package com.plog.domain.image.controller;
 
-import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.service.ImageService;
 import com.plog.global.security.JwtUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -24,27 +23,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * ImageController의 웹 계층 단위 테스트입니다.
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ * <b>테스트 범위:</b> Controller Layer (Service, Repository 제외) <br>
+ * <b>검증 대상:</b> API 요청 매핑, 파라미터 유효성 검사, 응답 Status 및 Body 포맷 <br>
+ * <b>Mocking:</b> {@code ImageService}는 Mock 객체로 대체하여 비즈니스 로직과 격리합니다.
  *
- * <p><b>상속 정보:</b><br>
- * 상속 정보를 적습니다.
- *
- * <p><b>주요 생성자:</b><br>
- * {@code ImageControllerTest(String example)} <br>
- * 주요 생성자와 그 매개변수에 대한 설명을 적습니다. <br>
- *
- * <p><b>빈 관리:</b><br>
- * 필요 시 빈 관리에 대한 내용을 적습니다.
- *
- * <p><b>외부 모듈:</b><br>
- * 필요 시 외부 모듈에 대한 내용을 적습니다.
- *
- * @author Jaewon Ryu
- * @see
- * @since 2026-01-20
+ * @see ImageController
  */
+
 @WebMvcTest(ImageController.class)
 @ActiveProfiles("test")
 class ImageControllerTest {

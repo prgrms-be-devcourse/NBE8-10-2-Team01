@@ -6,34 +6,26 @@ import com.plog.global.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.List;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * 이미지 리소스와 관련된 HTTP 요청을 처리하는 컨트롤러입니다.
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ * 클라이언트로부터 이미지 파일을 전송받아 서비스 계층으로 전달하고,
+ * 처리 결과를 표준 응답 포맷({@link CommonResponse})으로 반환합니다.
  *
  * <p><b>상속 정보:</b><br>
- * 상속 정보를 적습니다.
+ * {@code @RestController}가 적용되어 모든 메서드의 반환값이 Response Body로 직렬화됩니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code ImageController(String example)} <br>
- * 주요 생성자와 그 매개변수에 대한 설명을 적습니다. <br>
- *
- * <p><b>빈 관리:</b><br>
- * 필요 시 빈 관리에 대한 내용을 적습니다.
- *
- * <p><b>외부 모듈:</b><br>
- * 필요 시 외부 모듈에 대한 내용을 적습니다.
+ * {@code ImageController(ImageService imageService)} <br>
+ * {@code @RequiredArgsConstructor}를 통해 서비스 빈을 주입받습니다.
  *
  * @author Jaewon Ryu
- * @see
  * @since 2026-01-20
  */
 @RestController
@@ -43,6 +35,16 @@ public class ImageController {
 
     private final ImageService imageService;
 
+    /**
+     * 단일 이미지를 업로드합니다.
+     * <p>
+     * <b>API:</b> [POST] /api/images <br>
+     * <b>Content-Type:</b> multipart/form-data
+     *
+     * @param file 업로드할 이미지 파일 (key: "file")
+     * @return 201 Created 상태 코드와 함께 업로드된 이미지 URL을 반환
+     */
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<ImageUploadRes>> uploadImage(
             @RequestPart("file") MultipartFile file
@@ -51,21 +53,32 @@ public class ImageController {
 
         ImageUploadRes resDto = new ImageUploadRes(List.of(imageUrl));
 
-        return ResponseEntity.ok(
-                CommonResponse.success(resDto,"이미지 업로드 성공")
-        );
+        return ResponseEntity
+                .created(URI.create(imageUrl))
+                .body(CommonResponse.success(resDto, "이미지 업로드 성공"));
+
     }
 
+    /**
+     * 다중 이미지를 업로드합니다.
+     * <p>
+     * <b>API:</b> [POST] /api/images/bulk <br>
+     * <b>Content-Type:</b> multipart/form-data
+     *
+     * @param files 업로드할 이미지 파일 리스트 (key: "files")
+     * @return 201 Created 상태 코드와 함께 업로드된 이미지 URL 리스트를 반환
+     */
     @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<ImageUploadRes>> uploadImages(
-            @RequestPart("files") List<MultipartFile> files
+            @RequestParam("files") List<MultipartFile> files
     ) {
         List<String> imageUrls = imageService.uploadImages(files);
 
         ImageUploadRes resDto = new ImageUploadRes(imageUrls);
 
-        return ResponseEntity.ok(
-                CommonResponse.success(resDto,"다중 이미지 업로드 성공")
-        );
+        return ResponseEntity
+                .created(URI.create("/api/images"))
+                .body(CommonResponse.success(resDto, "다중 이미지 업로드 성공"));
+
     }
 }

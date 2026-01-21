@@ -5,22 +5,14 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * 이미지 도메인의 비즈니스 로직을 정의하는 서비스 인터페이스입니다.
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ * 컨트롤러와 구현체 사이의 결합도를 낮추기 위해 사용되며,
+ * 이미지 업로드 및 관련 데이터 처리에 대한 표준 명세를 제공합니다.
  *
- * <p><b>상속 정보:</b><br>
- * 상속 정보를 적습니다.
- *
- * <p><b>주요 생성자:</b><br>
- * {@code ImageService(String example)} <br>
- * 주요 생성자와 그 매개변수에 대한 설명을 적습니다. <br>
- *
- * <p><b>빈 관리:</b><br>
- * 필요 시 빈 관리에 대한 내용을 적습니다.
- *
- * <p><b>외부 모듈:</b><br>
- * 필요 시 외부 모듈에 대한 내용을 적습니다.
+ * <p><b>주요 기능:</b><br>
+ * - 단일 이미지 업로드 및 URL 반환 <br>
+ * - 다중 이미지 일괄 업로드 및 URL 리스트 반환
  *
  * @author Jaewon Ryu
  * @see
@@ -28,8 +20,16 @@ import java.util.List;
  */
 public interface ImageService {
 
+    /**
+     * 단일 이미지를 업로드하고 URL을 반환합니다.
+     * DB에 이미지 정보를 저장합니다.
+     */
     String uploadImage(MultipartFile file);
 
+
+    /**
+     * 다중 이미지를 업로드하고 URL 리스트를 반환합니다.
+     */
     List<String> uploadImages(List<MultipartFile> files);
 
 }
