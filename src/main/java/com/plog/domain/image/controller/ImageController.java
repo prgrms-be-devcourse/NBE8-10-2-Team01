@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -42,7 +41,7 @@ public class ImageController {
      * <b>Content-Type:</b> multipart/form-data
      *
      * @param file 업로드할 이미지 파일 (key: "file")
-     * @return 201 Created 상태 코드와 함께 업로드된 이미지 URL을 반환
+     * @return 200 OK 상태 코드와 함께 업로드된 이미지 URL을 반환
      */
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -54,8 +53,7 @@ public class ImageController {
         ImageUploadRes resDto = new ImageUploadRes(List.of(imageUrl));
 
         return ResponseEntity
-                .created(URI.create(imageUrl))
-                .body(CommonResponse.success(resDto, "이미지 업로드 성공"));
+                .ok(CommonResponse.success(resDto, "이미지 업로드 성공"));
 
     }
 
@@ -66,7 +64,7 @@ public class ImageController {
      * <b>Content-Type:</b> multipart/form-data
      *
      * @param files 업로드할 이미지 파일 리스트 (key: "files")
-     * @return 201 Created 상태 코드와 함께 업로드된 이미지 URL 리스트를 반환
+     * @return 200 OK 상태 코드와 함께 업로드된 이미지 URL 리스트를 반환
      */
     @PostMapping(value = "/bulk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CommonResponse<ImageUploadRes>> uploadImages(
@@ -77,8 +75,7 @@ public class ImageController {
         ImageUploadRes resDto = new ImageUploadRes(imageUrls);
 
         return ResponseEntity
-                .created(URI.create("/api/images"))
-                .body(CommonResponse.success(resDto, "다중 이미지 업로드 성공"));
+                .ok(CommonResponse.success(resDto, "다중 이미지 업로드 성공"));
 
     }
 }
