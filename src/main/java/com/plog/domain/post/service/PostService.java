@@ -55,4 +55,28 @@ public interface PostService {
      * @return 최신순으로 정렬된 게시물 정보 DTO 리스트
      */
     List<PostInfoRes> getPosts();
+
+    /**
+     * 기존 게시물을 수정합니다.
+     * <p><b>실행 로직:</b><br>
+     * 1. 전달받은 ID로 게시물을 조회하며, 없을 경우 예외를 발생시킵니다. <br>
+     * 2. 제목과 본문을 새로운 내용으로 교체합니다. <br>
+     * 3. 본문이 수정됨에 따라 마크다운 파싱 및 요약본(Summary) 생성 로직을 다시 실행하여 업데이트합니다.
+     *
+     * @param id 수정할 게시물 ID
+     * @param title 새로운 제목
+     * @param content 새로운 마크다운 본문
+     */
+    void updatePost(Long id, String title, String content);
+
+    /**
+     * 특정 게시물을 삭제합니다.
+     * <p><b>실행 로직:</b><br>
+     * 1. 전달받은 ID로 게시물을 조회하며, 존재하지 않을 경우 {@code PostException}을 발생시킵니다. <br>
+     * 2. 게시물이 존재하면 해당 리소스를 데이터베이스에서 영구적으로 삭제합니다.
+     *
+     * @param id 삭제할 게시물 ID
+     * @throws com.plog.global.exception.exceptions.PostException 게시물을 찾을 수 없을 때 발생
+     */
+    void deletePost(Long id);
 }
