@@ -7,6 +7,7 @@ import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.service.AuthService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.exception.exceptions.AuthException;
+import com.plog.global.response.Response;
 import com.plog.global.rq.Rq;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -80,7 +81,7 @@ public class AuthController {
      * @return 로그인 성공 메시지와 사용자 닉네임, Access Token을 포함한 공통 응답 객체 (200 OK)
      */
     @PostMapping("/sign-in")
-    public ResponseEntity<CommonResponse<AuthSignInRes>> signIn(
+    public ResponseEntity<Response<AuthSignInRes>> signIn(
             @Valid @RequestBody AuthSignInReq req
     ) {
         Member member = authService.signIn(
@@ -110,7 +111,7 @@ public class AuthController {
      * @return 로그아웃 완료 메시지를 포함한 공통 응답 객체 (200 OK)
      */
     @GetMapping("/logout")
-    public ResponseEntity<CommonResponse<Void>> logout() {
+    public ResponseEntity<Response<Void>> logout() {
         rq.deleteCookie("apiKey");
         return ResponseEntity.ok(
                 CommonResponse.success(null, "로그아웃 되었습니다.")
@@ -127,7 +128,7 @@ public class AuthController {
      * @throws AuthException Refresh Token이 유효하지 않거나 만료된 경우 발생
      */
     @GetMapping("/reissue")
-    public ResponseEntity<CommonResponse<AuthSignInRes>> accessTokenReissue() {
+    public ResponseEntity<Response<AuthSignInRes>> accessTokenReissue() {
         String refreshToken = rq.getCookieValue("apiKey", null);
         AuthSignInRes reissuedRes = authService.accessTokenReissue(refreshToken);
 
