@@ -119,7 +119,7 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("게시글 수정 요청 시 성공 메시지와 함께 204 No Content를 반환한다")
+    @DisplayName("게시글 수정 요청 시 204 No Content를 반환한다")
     void updatePostSuccess() throws Exception {
         // [Given]
         Long postId = 1L;
