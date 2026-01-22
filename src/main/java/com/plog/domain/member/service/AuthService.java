@@ -1,7 +1,10 @@
 package com.plog.domain.member.service;
 
 
-import com.plog.domain.member.dto.AuthSignInRes;
+import com.plog.domain.member.dto.AuthLoginResult;
+import com.plog.domain.member.dto.AuthSignInReq;
+import com.plog.domain.member.dto.AuthSignUpReq;
+import com.plog.domain.member.dto.MemberInfoRes;
 import com.plog.domain.member.entity.Member;
 import com.plog.global.exception.exceptions.AuthException;
 import org.springframework.stereotype.Service;
@@ -36,7 +39,8 @@ public interface AuthService {
      * @param member 토큰에 담을 정보를 보유한 회원 엔티티
      * @return 생성된 JWT Access Token 문자열
      */
-    String genAccessToken(Member member);
+
+    String genAccessToken(MemberInfoRes member);
 
     /**
      * 사용자의 보안 유지를 위한 Refresh Token을 생성합니다.
@@ -48,7 +52,8 @@ public interface AuthService {
      * @param member 토큰 생성 대상 회원 엔티티
      * @return 생성된 JWT Refresh Token 문자열
      */
-    String genRefreshToken(Member member);
+
+    String genRefreshToken(MemberInfoRes member);
 
     /**
      * 새로운 회원을 시스템에 등록합니다.
@@ -57,13 +62,11 @@ public interface AuthService {
      * 2. 보안을 위해 비밀번호를 단방향 해시 알고리즘({@code PasswordEncoder})으로 암호화합니다. <br>
      * 3. 회원 정보를 데이터베이스에 저장하고 생성된 고유 식별자(ID)를 반환합니다.
      *
-     * @param email 가입 이메일
-     * @param password 평문 비밀번호
-     * @param nickname 사용자 별명
+     * @param req 회원가입 요청 데이터 (email, password, nickname)
      * @return 생성된 회원의 고유 식별자(ID)
      * @throws AuthException 이미 존재하는 이메일일 경우 발생
      */
-    Long signUp(String email, String password, String nickname);
+    Long signUp(AuthSignUpReq req);
 
     /**
      * 사용자의 자격 증명을 확인하여 로그인을 처리합니다.
@@ -72,12 +75,11 @@ public interface AuthService {
      * 2. 입력된 평문 비밀번호와 저장된 암호화 비밀번호를 비교 검증합니다. <br>
      * 3. 검증에 성공하면 회원 엔티티를 반환하며, 실패 시 인증 예외를 발생시킵니다.
      *
-     * @param email 로그인 시도 이메일
-     * @param password 로그인 시도 비밀번호
-     * @return 인증이 완료된 회원 엔티티
+     * @param req 로그인 요청 데이터 (email, password)
+     * @return nickname, Access Token, Refresh Token이 포함된 로그인 결과 DTO
      * @throws AuthException 이메일 미존재 또는 비밀번호 불일치 시 발생
      */
-    Member signIn(String email, String password);
+    AuthLoginResult signIn(AuthSignInReq req);
 
     /**
      * 만료된 Access Token을 Refresh Token을 사용하여 재발급합니다.
@@ -87,8 +89,8 @@ public interface AuthService {
      * 3. 새로운 Access Token을 생성하고, 사용자 닉네임과 함께 DTO 객체에 담아 반환합니다.
      *
      * @param refreshToken 클라이언트로부터 전달받은 Refresh Token
-     * @return 새 Access Token과 회원 정보(닉네임)를 포함한 DTO
+     * @return 갱신된 Access/Refresh Token과 사용자 정보를 포함한 결과 DTO
      * @throws AuthException 토큰이 유효하지 않거나 만료되었을 때 발생
      */
-    AuthSignInRes accessTokenReissue(String refreshToken);
+    AuthLoginResult tokenReissue(String refreshToken);
 }

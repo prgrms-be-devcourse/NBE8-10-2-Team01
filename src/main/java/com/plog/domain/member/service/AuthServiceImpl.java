@@ -1,7 +1,10 @@
 package com.plog.domain.member.service;
 
 
-import com.plog.domain.member.dto.AuthSignInRes;
+import com.plog.domain.member.dto.AuthLoginResult;
+import com.plog.domain.member.dto.AuthSignInReq;
+import com.plog.domain.member.dto.AuthSignUpReq;
+import com.plog.domain.member.dto.MemberInfoRes;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
@@ -34,9 +37,6 @@ import java.util.Map;
  * @since 2026-01-15
  */
 
-// TODO: MemberService 주입 받아서 중복 로직 리팩토링 필요
-// TODO: Member -> MemberInfoRes 혹은 추가 Dto 생성 필요
-
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -47,52 +47,57 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
 
     @Override
-    public String genAccessToken(Member member) {
+    public String genAccessToken(MemberInfoRes member) {
         return jwtUtils.createAccessToken(Map.of(
-                "id", member.getId(),
-                "email", member.getEmail(),
-                "nickname", member.getNickname()
+                "id", member.id(),
+                "email", member.email(),
+                "nickname", member.nickname()
         ));
     }
 
     @Override
-    public String genRefreshToken(Member member) {
-        return jwtUtils.createRefreshToken(member.getId());
+    public String genRefreshToken(MemberInfoRes member) {
+        return jwtUtils.createRefreshToken(member.id());
     }
 
     @Override
     @Transactional
-    public Long signUp(String email, String password, String nickname) {
-        if (memberService.isDuplicateEmail(email)) {
+    public Long signUp(AuthSignUpReq req) {
+        if (memberService.isDuplicateEmail(req.email())) {
             throw new AuthException(AuthErrorCode.USER_ALREADY_EXIST,
-                    "[AuthServiceImpl#signUp] user email already exists.",
+                    "[AuthServiceImpl#signUp] email dup",
                     "이미 가입된 이메일입니다.");
         }
 
-        if (memberService.isDuplicateNickname(nickname)) {
+        if (memberService.isDuplicateNickname(req.nickname())) {
             throw new AuthException(AuthErrorCode.USER_ALREADY_EXIST,
-                    "[AuthServiceImpl#signUp] user nickname already exists.",
+                    "[AuthServiceImpl#signUp] user dup",
                     "이미 사용 중인 닉네임입니다.");
         }
 
-        password = passwordEncoder.encode(password);
+        String encodedPassword = passwordEncoder.encode(req.password());
         Member member = Member.builder()
-                .email(email)
-                .password(password)
-                .nickname(nickname)
+                .email(req.email())
+                .password(encodedPassword)
+                .nickname(req.nickname())
                 .build();
         return memberRepository.save(member).getId();
     }
 
     @Override
-    public Member signIn(String email, String password) {
-        Member member = findByEmail(email);
-        checkPassword(member, password);
-        return member;
+    public AuthLoginResult signIn(AuthSignInReq req) {
+        Member member = findByEmail(req.email());
+        checkPassword(member, req.password());
+
+        MemberInfoRes memberInfo = MemberInfoRes.from(member);
+        String accessToken = genAccessToken(memberInfo);
+        String refreshToken = genRefreshToken(memberInfo);
+
+        return new AuthLoginResult(member.getNickname(), accessToken, refreshToken);
     }
 
     @Override
-    public AuthSignInRes accessTokenReissue(String refreshToken) {
+    public AuthLoginResult tokenReissue(String refreshToken) {
         if (refreshToken == null) {
             throw new AuthException(AuthErrorCode.TOKEN_INVALID);
         }
@@ -100,33 +105,23 @@ public class AuthServiceImpl implements AuthService {
         try {
             Claims claims = jwtUtils.parseToken(refreshToken);
             Long memberId = claims.get("id", Long.class);
-            Member member = findById(memberId);
+
+            MemberInfoRes member = memberService.findMemberWithId(memberId);
             String newAccessToken = genAccessToken(member);
-            return new AuthSignInRes(member.getNickname(), newAccessToken);
+            String newRefreshToken = genRefreshToken(member);
+            return new AuthLoginResult(member.nickname(), newAccessToken, newRefreshToken);
 
         } catch (ExpiredJwtException e) {
             throw new AuthException(AuthErrorCode.LOGIN_REQUIRED,
-                    "[AuthServiceImpl#accessTokenReissue] Refresh Token expired",
+                    "[AuthServiceImpl#tokenReissue] Refresh Token expired",
                     "세션이 만료되었습니다. 다시 로그인해 주세요.");
         } catch (Exception e) {
             throw new AuthException(
                     AuthErrorCode.TOKEN_INVALID,
-                    "[AuthServiceImpl] Unexpected reissue error: " + e.getMessage(),
+                    "[AuthServiceImpl#tokenReissue] Unexpected reissue error: " + e.getMessage(),
                     "유효한 토큰이 아닙니다."
             );
         }
-    }
-
-    /**
-     * 고유 식별자(ID)를 통해 회원을 조회하며, 존재하지 않을 경우 예외를 발생시킵니다.
-     *
-     * @param id 회원 고유 식별자
-     * @return 조회된 회원 엔티티
-     * @throws AuthException 회원을 찾을 수 없는 경우 발생
-     */
-    private Member findById(Long id) {
-        return memberRepository.findById(id)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_CREDENTIALS));
     }
 
     /**

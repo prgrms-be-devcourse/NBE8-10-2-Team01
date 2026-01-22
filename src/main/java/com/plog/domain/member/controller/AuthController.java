@@ -1,9 +1,9 @@
 package com.plog.domain.member.controller;
 
+import com.plog.domain.member.dto.AuthLoginResult;
 import com.plog.domain.member.dto.AuthSignInReq;
-import com.plog.domain.member.dto.AuthSignInRes;
+import com.plog.domain.member.dto.AuthInfoRes;
 import com.plog.domain.member.dto.AuthSignUpReq;
-import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.service.AuthService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.exception.exceptions.AuthException;
@@ -61,11 +61,7 @@ public class AuthController {
     public ResponseEntity<Void> signUp(
             @Valid @RequestBody AuthSignUpReq req
     ) {
-        Long memberId = authService.signUp(
-                req.email(),
-                req.password(),
-                req.nickname()
-        );
+        Long memberId = authService.signUp(req);
 
         return ResponseEntity.created(URI.create(("/api/members/"+memberId))).build();
     }
@@ -81,24 +77,15 @@ public class AuthController {
      * @return 로그인 성공 메시지와 사용자 닉네임, Access Token을 포함한 공통 응답 객체 (200 OK)
      */
     @PostMapping("/sign-in")
-    public ResponseEntity<Response<AuthSignInRes>> signIn(
+    public ResponseEntity<Response<AuthInfoRes>> signIn(
             @Valid @RequestBody AuthSignInReq req
     ) {
-        Member member = authService.signIn(
-                req.email(),
-                req.password()
-        );
-
-        String accessToken = authService.genAccessToken(member);
-        String refreshToken = authService.genRefreshToken(member);
-        rq.setHeader("Authorization", accessToken);
-        rq.setCookie("apiKey", refreshToken);
-
-        String nickname = member.getNickname();
-        AuthSignInRes res = new AuthSignInRes(nickname, accessToken);
+        AuthLoginResult res = authService.signIn(req);
+        rq.setHeader("Authorization", res.accessToken());
+        rq.setCookie("apiKey", res.refreshToken());
 
         return ResponseEntity.ok(
-                CommonResponse.success(res, "%s님 환영합니다.".formatted(nickname))
+                CommonResponse.success(AuthInfoRes.from(res), "%s님 환영합니다.".formatted(res.nickname()))
         );
     }
 
@@ -122,21 +109,22 @@ public class AuthController {
      * 만료된 Access Token을 재발급합니다.
      * <p>
      * 쿠키에 담긴 Refresh Token(apiKey)의 유효성을 검증하고,
-     * 새로운 Access Token을 생성하여 헤더와 응답 바디를 통해 반환합니다.
+     * 새로운 Access Token과 Refresh Token을 생성합니다.
+     * 각각 헤더, 쿠키에 설정하고 응답은 Refresh를 제외하여 바디를 통해 반환합니다.
      *
      * @return 갱신된 Access Token을 포함한 공통 응답 객체 (200 OK)
      * @throws AuthException Refresh Token이 유효하지 않거나 만료된 경우 발생
      */
     @GetMapping("/reissue")
-    public ResponseEntity<Response<AuthSignInRes>> accessTokenReissue() {
+    public ResponseEntity<Response<AuthInfoRes>> accessTokenReissue() {
         String refreshToken = rq.getCookieValue("apiKey", null);
-        AuthSignInRes reissuedRes = authService.accessTokenReissue(refreshToken);
+        AuthLoginResult res = authService.tokenReissue(refreshToken);
 
-        rq.setHeader("Authorization", reissuedRes.accessToken());
-        AuthSignInRes res = new AuthSignInRes(reissuedRes.nickname(), reissuedRes.accessToken());
+        rq.setHeader("Authorization", res.accessToken());
+        rq.setCookie("apiKey", res.refreshToken());
 
         return ResponseEntity.ok(
-                CommonResponse.success(res, "토큰이 재발급되었습니다.")
+                CommonResponse.success(AuthInfoRes.from(res), "토큰이 재발급되었습니다.")
         );
     }
 }
