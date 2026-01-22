@@ -116,7 +116,7 @@ public class AuthController {
      * @throws AuthException Refresh Token이 유효하지 않거나 만료된 경우 발생
      */
     @GetMapping("/reissue")
-    public ResponseEntity<Response<AuthInfoRes>> accessTokenReissue() {
+    public ResponseEntity<Response<AuthInfoRes>> tokenReissue() {
         String refreshToken = rq.getCookieValue("apiKey", null);
         AuthLoginResult res = authService.tokenReissue(refreshToken);
 

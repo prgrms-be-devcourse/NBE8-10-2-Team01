@@ -25,36 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2026-01-15
  */
 
-@Service
-@Transactional
 public interface AuthService {
-
-    /**
-     * 사용자의 정보를 바탕으로 Access Token을 생성합니다.
-     * <p><b>실행 로직:</b><br>
-     * 1. {@link Member} 엔티티에서 식별자(ID), 이메일, 닉네임을 추출합니다. <br>
-     * 2. 추출된 정보를 JWT의 Claim으로 삽입합니다. <br>
-     * 3. 설정된 비밀키와 알고리즘을 사용하여 단기 유효 기간을 가진 토큰을 발행합니다.
-     *
-     * @param member 토큰에 담을 정보를 보유한 회원 엔티티
-     * @return 생성된 JWT Access Token 문자열
-     */
-
-    String genAccessToken(MemberInfoRes member);
-
-    /**
-     * 사용자의 보안 유지를 위한 Refresh Token을 생성합니다.
-     * <p><b>실행 로직:</b><br>
-     * 1. 회원의 식별자(ID)를 기반으로 토큰을 생성합니다. <br>
-     * 2. Access Token보다 긴 유효 기간을 설정합니다.
-     * 3. 해당 토큰은 클라이언트의 보안 쿠키(HttpOnly)에 저장됩니다.
-     *
-     * @param member 토큰 생성 대상 회원 엔티티
-     * @return 생성된 JWT Refresh Token 문자열
-     */
-
-    String genRefreshToken(MemberInfoRes member);
-
     /**
      * 새로운 회원을 시스템에 등록합니다.
      * <p><b>실행 로직:</b><br>
