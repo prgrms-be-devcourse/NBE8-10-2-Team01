@@ -37,6 +37,8 @@ class AuthServiceTest {
     @Mock
     private MemberRepository memberRepository;
     @Mock
+    private MemberService memberService;
+    @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtUtils jwtUtils;
@@ -44,7 +46,7 @@ class AuthServiceTest {
     private AuthServiceImpl authService;
 
     @Test
-    @DisplayName("회원가입 성공 - 비밀번호를 암호화 저장, ID를 반환")
+    @DisplayName("회원가입 성공 - 이메일/닉네임 중복 없음, 비밀번호를 암호화, ID 반환")
     void signUp_success() {
         // given
         String email = "test@plog.com";
@@ -55,7 +57,8 @@ class AuthServiceTest {
         Member mockMember = mock(Member.class);
         given(mockMember.getId()).willReturn(1L);
 
-        given(memberRepository.findByEmail(email)).willReturn(Optional.empty());
+        given(memberService.isDuplicateEmail(email)).willReturn(false);
+        given(memberService.isDuplicateNickname(nickname)).willReturn(false);
         given(passwordEncoder.encode(rawPassword)).willReturn(encodedPassword);
         given(memberRepository.save(any(Member.class))).willReturn(mockMember);
 
@@ -64,17 +67,18 @@ class AuthServiceTest {
 
         // then
         assertThat(savedId).isEqualTo(1L);
-        then(memberRepository).should(times(1)).findByEmail(email);
+        then(memberService).should().isDuplicateEmail(email);
+        then(memberService).should().isDuplicateNickname(nickname);
         then(passwordEncoder).should(times(1)).encode(rawPassword);
         then(memberRepository).should(times(1)).save(any(Member.class));
     }
 
     @Test
-    @DisplayName("회원가입 실패 - 이미 존재하는 이메일, USER_ALREADY_EXIST 예외 발생")
+    @DisplayName("회원가입 실패 - 이미 존재하는 이메일")
     void signUp_fail_alreadyExist() {
         // given
         String email = "exist@plog.com";
-        given(memberRepository.findByEmail(email)).willReturn(Optional.of(mock(Member.class)));
+        given(memberService.isDuplicateEmail(email)).willReturn(true);
 
         // when
         AuthException ex = assertThrows(AuthException.class,
@@ -82,8 +86,28 @@ class AuthServiceTest {
 
         // then
         assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.USER_ALREADY_EXIST);
-        then(memberRepository).should(times(1)).findByEmail(email);
-        then(memberRepository).should(times(0)).save(any(Member.class));
+        assertThat(ex.getMessage()).isEqualTo("이미 가입된 이메일입니다.");
+        then(memberRepository).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("회원가입 실패 - 이미 사용 중인 닉네임")
+    void signUp_fail_alreadyExistNickname() {
+        // given
+        String email = "test@plog.com";
+        String nickname = "duplicateNick";
+
+        given(memberService.isDuplicateEmail(email)).willReturn(false);
+        given(memberService.isDuplicateNickname(nickname)).willReturn(true);
+
+        // when
+        AuthException ex = assertThrows(AuthException.class,
+                () -> authService.signUp(email, "pw", nickname));
+
+        // then
+        assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.USER_ALREADY_EXIST);
+        assertThat(ex.getMessage()).isEqualTo("이미 사용 중인 닉네임입니다.");
+        then(passwordEncoder).shouldHaveNoInteractions();
     }
 
     @Test

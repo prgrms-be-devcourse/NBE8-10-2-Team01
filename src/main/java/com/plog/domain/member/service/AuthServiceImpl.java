@@ -35,11 +35,13 @@ import java.util.Map;
  */
 
 // TODO: MemberService 주입 받아서 중복 로직 리팩토링 필요
+// TODO: Member -> MemberInfoRes 혹은 추가 Dto 생성 필요
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+    private final MemberService memberService;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
@@ -61,14 +63,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public Long signUp(String email, String password, String nickname) {
-        // TODO: 닉네임 중복 확인 로직 필요 -> MemberService 주입 시 같이 진행
-        memberRepository.findByEmail(email)
-                .ifPresent(_member -> {
-                            throw new AuthException(AuthErrorCode.USER_ALREADY_EXIST,
-                                    "[AuthServiceImpl#signUp] user already exists.",
-                                    "이미 가입 완료된 이메일입니다."
-                                    );
-                });
+        if (memberService.isDuplicateEmail(email)) {
+            throw new AuthException(AuthErrorCode.USER_ALREADY_EXIST,
+                    "[AuthServiceImpl#signUp] user email already exists.",
+                    "이미 가입된 이메일입니다.");
+        }
+
+        if (memberService.isDuplicateNickname(nickname)) {
+            throw new AuthException(AuthErrorCode.USER_ALREADY_EXIST,
+                    "[AuthServiceImpl#signUp] user nickname already exists.",
+                    "이미 사용 중인 닉네임입니다.");
+        }
 
         password = passwordEncoder.encode(password);
         Member member = Member.builder()
