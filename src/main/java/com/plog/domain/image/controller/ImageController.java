@@ -1,5 +1,6 @@
 package com.plog.domain.image.controller;
 
+import com.plog.domain.image.dto.ImageInfoRes;
 import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.service.ImageService;
 import com.plog.global.response.CommonResponse;
@@ -77,5 +78,23 @@ public class ImageController {
                 result.failedFilenames().size());
 
         return ResponseEntity.ok(CommonResponse.success(result, message));
+    }
+    /**
+     * 이미지 ID로 단일 이미지를 조회합니다.
+     * <p>
+     * <b>API:</b> [GET] /api/images/{imageId}
+     *
+     * @param imageId 조회할 이미지의 고유 ID
+     * @return 200 OK 상태 코드와 함께 이미지 정보 반환
+     */
+    @GetMapping("/{imageId}")  // URL: /api/images/1
+    public ResponseEntity<CommonResponse<ImageInfoRes>> getImage(
+            @PathVariable Long imageId  // URL의 숫자 자동 변수 저장
+    ) {
+        ImageInfoRes result = imageService.findImage(imageId);  // 3단계 Service 호출
+
+        return ResponseEntity.ok(  // HTTP 200 OK
+                CommonResponse.success(result, "이미지 조회 성공")  // 공통 응답 포맷
+        );
     }
 }
