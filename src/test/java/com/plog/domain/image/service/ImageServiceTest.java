@@ -1,6 +1,7 @@
 package com.plog.domain.image.service;
 
 
+import com.plog.domain.image.dto.ImageInfoRes;
 import com.plog.domain.image.entity.Image;
 import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.repository.ImageRepository;
@@ -19,14 +20,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * ImageService의 비즈니스 로직을 검증하는 단위 테스트(Unit Test)입니다.
@@ -157,5 +158,43 @@ public class ImageServiceTest {
 
         assertThatThrownBy(() -> imageService.uploadImage(emptyFile))
                 .isInstanceOf(ImageException.class);
+    }
+
+    @Test
+    @DisplayName("이미지 ID로 성공적으로 조회")
+    void findImage_success() {
+        // [Given]
+        Long imageId = (Long) 1L;
+        Image existingImage = Image.builder()
+                .originalName("cat.jpg")
+                .storedName("uuid-cat.jpg")
+                .accessUrl("http://minio.com/bucket/uuid-cat.jpg")
+                .build();
+
+        Image mockImage = mock(Image.class);
+        given(mockImage.getId()).willReturn(imageId);
+        given(mockImage.getOriginalName()).willReturn("cat.jpg");
+        given(mockImage.getAccessUrl()).willReturn("http://minio.com/bucket/uuid-cat.jpg");
+        given(mockImage.getStoredName()).willReturn("uuid-cat.jpg");
+
+        given(imageRepository.findById(imageId))
+                .willReturn(Optional.of(mockImage));  // Mock 반환
+
+        // [When]
+        ImageInfoRes result = imageService.findImage(imageId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 이미지 ID 조회 시 ImageException 발생")
+    void findImage_failNotFound() {
+        // [Given]
+        Long imageId = (Long) 999L;
+        given(imageRepository.findById(imageId))
+                .willReturn(Optional.empty());
+
+        // [When & Then]
+        assertThatThrownBy(() -> imageService.findImage(imageId))
+                .isInstanceOf(ImageException.class)
+                .hasMessageContaining("존재하지 않는 이미지입니다.");
     }
 }
