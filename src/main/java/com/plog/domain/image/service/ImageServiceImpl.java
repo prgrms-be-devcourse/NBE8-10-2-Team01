@@ -1,5 +1,6 @@
 package com.plog.domain.image.service;
 
+import com.plog.domain.image.dto.ImageInfoRes;
 import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.entity.Image;
 import com.plog.domain.image.repository.ImageRepository;
@@ -123,5 +124,17 @@ public class ImageServiceImpl implements ImageService {
         }
 
         return new ImageUploadRes(successUrls, failedFilenames);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public ImageInfoRes findImage(Long imageId) {
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ImageException(
+                        ImageErrorCode.IMAGE_NOT_FOUND,
+                        "[ImageServiceImpl#findImage] can't find image by id: " + imageId,
+                        "존재하지 않는 이미지입니다."
+                ));
+
+        return ImageInfoRes.from(image);  // 1단계 DTO 변환
     }
 }

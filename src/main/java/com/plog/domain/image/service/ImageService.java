@@ -1,5 +1,6 @@
 package com.plog.domain.image.service;
 
+import com.plog.domain.image.dto.ImageInfoRes;
 import com.plog.domain.image.dto.ImageUploadRes;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,4 +34,10 @@ public interface ImageService {
      */
     ImageUploadRes uploadImages(List<MultipartFile> files);
 
+    /**
+     * 이미지 ID로 단건 조회합니다.
+     * <p>
+     * 프론트엔드에서 img src={response.accessUrl} 렌더링용
+     */
+    ImageInfoRes findImage(Long imageId);
 }
