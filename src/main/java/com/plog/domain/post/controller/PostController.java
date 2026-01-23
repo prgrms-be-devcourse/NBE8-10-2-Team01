@@ -1,5 +1,7 @@
-package com.plog.domain.post.controller;
+﻿package com.plog.domain.post.controller;
 
+import com.plog.domain.post.constant.PostSearchType;
+import com.plog.domain.post.constant.PostSortType;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.dto.PostUpdateReq;
@@ -8,6 +10,8 @@ import com.plog.global.response.CommonResponse;
 import com.plog.global.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,6 +81,25 @@ public class PostController {
     public ResponseEntity<Response<List<PostInfoRes>>> getPosts() {
         List<PostInfoRes> posts = postService.getPosts();
         return ResponseEntity.ok(CommonResponse.success(posts, "게시글 목록 조회 성공"));
+    }
+
+    /**
+     * 키워드로 게시물을 검색합니다.
+     *
+     * @param keyword 검색 키워드
+     * @param type 검색 대상 (TITLE/HASHTAG)
+     * @param sort 정렬 타입(POPULAR/LATEST)
+     * @param pageable 페이지/크기 정보
+     * @return 검색 게시물 페이지
+     */
+    public ResponseEntity<Response<Page<PostInfoRes>>> searchPosts(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "TITLE") PostSearchType type,
+            @RequestParam(defaultValue = "LATEST") PostSortType sort,
+            Pageable pageable
+    ) {
+        Page<PostInfoRes> posts = postService.searchPosts(keyword, type, sort, pageable);
+        return ResponseEntity.ok(CommonResponse.success(posts, "게시글 검색 성공"));
     }
 
     /**

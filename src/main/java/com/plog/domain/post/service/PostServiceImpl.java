@@ -1,15 +1,21 @@
-package com.plog.domain.post.service;
+﻿package com.plog.domain.post.service;
 
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.constant.PostSearchType;
+import com.plog.domain.post.constant.PostSortType;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.entity.PostStatus;
 import com.plog.domain.post.repository.PostRepository;
 import com.plog.global.exception.errorCode.PostErrorCode;
 import com.plog.global.exception.exceptions.PostException;
+import com.plog.global.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.text.TextContentRenderer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +81,28 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Page<PostInfoRes> searchPosts(String keyword, PostSearchType searchType, PostSortType sortType, Pageable pageable) {
+        if (keyword == null || keyword.isBlank()) {
+            return Page.empty(pageable);
+        }
+
+        Sort sort = buildSort(sortType);
+        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
+
+        if (searchType == PostSearchType.TITLE) {
+            return postRepository.findByTitleContaining(keyword, sortedPageable)
+                    .map(PostInfoRes::from);
+        }
+
+        String normalizedKeyword = StringUtils.normalize(keyword);
+        if (normalizedKeyword == null || normalizedKeyword.isBlank()) {
+            return Page.empty(sortedPageable);
+        }
+        // TODO: 해시태그 엔티티 연동 시 이 위치에 해시태그 검색 로직을 추가하세요.
+        return Page.empty(sortedPageable);
+    }
+
+    @Override
     @Transactional
     public void updatePost(Long id, String title, String content) {
         Post post = postRepository.findById(id)
@@ -122,5 +150,16 @@ public class PostServiceImpl implements PostService {
             return plainText;
         }
         return plainText.substring(0, MAX_SUMMARY_LENGTH) + "...";
+    }
+
+    private Sort buildSort(PostSortType sortType) {
+        if (sortType == PostSortType.POPULAR) {
+            return Sort.by(Sort.Direction.DESC, "viewCount");
+        } else if(sortType == PostSortType.LATEST) {
+            return Sort.by(Sort.Direction.DESC, "createDate");
+        }
+
+        throw new PostException(PostErrorCode.POST_SEARCH_FAIL,
+                "[PostService#buildSort] unknown sort type");
     }
 }

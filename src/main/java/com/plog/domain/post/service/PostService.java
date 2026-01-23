@@ -1,6 +1,10 @@
-package com.plog.domain.post.service;
+﻿package com.plog.domain.post.service;
 
+import com.plog.domain.post.constant.PostSearchType;
+import com.plog.domain.post.constant.PostSortType;
 import com.plog.domain.post.dto.PostInfoRes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 /**
@@ -55,6 +59,17 @@ public interface PostService {
      * @return 최신순으로 정렬된 게시물 정보 DTO 리스트
      */
     List<PostInfoRes> getPosts();
+
+    /**
+     * 키워드로 게시물을 검색합니다.
+     *
+     * @param keyword 검색 키워드
+     * @param searchType 검색 대상 (TITLE/HASHTAG)
+     * @param sortType 정렬 타입(POPULAR/LATEST)
+     * @param pageable 페이지/크기 정보
+     * @return 검색된 게시물 페이지
+     */
+    Page<PostInfoRes> searchPosts(String keyword, PostSearchType searchType, PostSortType sortType, Pageable pageable);
 
     /**
      * 기존 게시물을 수정합니다.

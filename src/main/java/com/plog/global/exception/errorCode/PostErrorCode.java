@@ -22,7 +22,9 @@ public enum PostErrorCode implements ErrorCode {
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다."),
     POST_CREATE_FAIL(HttpStatus.BAD_REQUEST, "게시글 작성에 실패했습니다."),
     POST_UPDATE_FAIL(HttpStatus.BAD_REQUEST, "게시글 수정에 실패했습니다."),
-    POST_DELETE_FAIL(HttpStatus.BAD_REQUEST, "게시글 삭제에 실패했습니다.");
+    POST_DELETE_FAIL(HttpStatus.BAD_REQUEST, "게시글 삭제에 실패했습니다."),
+
+    POST_SEARCH_FAIL(HttpStatus.BAD_REQUEST, "게시글 검색에 실패했습니다.");
 
     private final HttpStatus status;
     private final String message;
