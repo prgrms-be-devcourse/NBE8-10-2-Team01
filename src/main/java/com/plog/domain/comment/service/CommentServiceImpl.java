@@ -1,5 +1,6 @@
 package com.plog.domain.comment.service;
 
+import com.plog.domain.comment.constant.CommentConstants;
 import com.plog.domain.comment.dto.CommentCreateReq;
 import com.plog.domain.comment.dto.ReplyInfoRes;
 import com.plog.domain.post.entity.Post;
@@ -24,7 +25,6 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
-
 
     @Override
     @Transactional
@@ -58,7 +58,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<CommentInfoRes> getCommentsByPostId(Long postId, Pageable pageable) {
+    public Slice<CommentInfoRes> getCommentsByPostId(Long postId, int page) {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(
@@ -67,6 +67,12 @@ public class CommentServiceImpl implements CommentService {
                         "존재하지 않는 게시물입니다."
                 ));
 
+        Pageable pageable = PageRequest.of(
+                page,
+                CommentConstants.COMMENT_PAGE_SIZE,
+                Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
+        );
+
         Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(postId, pageable);
 
         return comments.map(CommentInfoRes::new);
@@ -74,12 +80,18 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, Pageable pageable) {
+    public Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, int page) {
 
         Comment parent = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND,
                         "[CommentService#getRepliesByCommentId] 부모 댓글이 존재하지 않음: " + commentId,
                         "존재하지 않는 댓글입니다."));
+
+        Pageable pageable = PageRequest.of(
+                page,
+                CommentConstants.COMMENT_PAGE_SIZE,
+                Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
+        );
 
         Slice<Comment> replies = commentRepository.findByParentId(commentId, pageable);
 

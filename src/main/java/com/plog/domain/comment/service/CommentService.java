@@ -41,7 +41,6 @@ import java.util.List;
 
 public interface CommentService {
 
-
     /**
      * 단일 게시글(Post)에 새로운 댓글 또는 대댓글을 작성한다.
      *
@@ -68,9 +67,10 @@ public interface CommentService {
      * </p>
      *
      * @param postId 게시글 식별자
+     * @param page 조회할 댓글 offset
      * @return 댓글 목록 응답 DTO 슬라이스
      */
-    Slice<CommentInfoRes> getCommentsByPostId(Long postId, Pageable pageable);
+    Slice<CommentInfoRes> getCommentsByPostId(Long postId, int page);
 
 
     /**
@@ -82,9 +82,10 @@ public interface CommentService {
      * </p>
      *
      * @param commentId 부모 댓글 식별자
+     * @param page 조회할 대댓글 offset
      * @return 대댓글 목록 응답 DTO 슬라이스
      */
-    Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, Pageable pageable);
+    Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, int page);
 
 
     /**

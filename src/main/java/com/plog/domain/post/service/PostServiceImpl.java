@@ -62,14 +62,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostInfoRes getPostDetail(Long id, Pageable pageable) {
+    public PostInfoRes getPostDetail(Long id, int pageNumber) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#getPostDetail] can't find post by id", "존재하지 않는 게시물입니다."));
 
         post.incrementViewCount();
 
-        Slice<CommentInfoRes> comments = commentService.getCommentsByPostId(id, pageable);
+        Slice<CommentInfoRes> comments = commentService.getCommentsByPostId(id, pageNumber);
 
         return PostInfoRes.from(post, comments);
     }
