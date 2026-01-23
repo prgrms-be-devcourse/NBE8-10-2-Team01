@@ -30,8 +30,9 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public Long createComment(Long postId, CommentCreateReq req){
 
-        //TODO: 추후 Post 예외처리 정책으로 수정 예정.
-        Post post = postRepository.findById(postId).get();
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
+                        "[PostServiceImpl#getPostDetail] can't find post by id", "존재하지 않는 게시물입니다."));
 
         Comment parentComment = null;
 
@@ -56,6 +57,20 @@ public class CommentServiceImpl implements CommentService {
         return commentRepository.save(comment).getId();
     }
 
+    //부모 댓글과 prefetch 자식 댓글을 하나의 DTO로 바꾸는 로직
+    private CommentInfoRes convertToCommentInfoRes(Comment comment) {
+
+        Pageable replyPageable = PageRequest.of(
+                0,
+                CommentConstants.REPLY_PAGE_SIZE,
+                Sort.by("createDate").ascending()
+        );
+
+        Slice<Comment> replySlice = commentRepository.findByParentId(comment.getId(), replyPageable);
+
+        return new CommentInfoRes(comment, replySlice.map(ReplyInfoRes::new));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Slice<CommentInfoRes> getCommentsByPostId(Long postId, int pageNumber) {
@@ -75,7 +90,7 @@ public class CommentServiceImpl implements CommentService {
 
         Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(postId, pageable);
 
-        return comments.map(CommentInfoRes::new);
+        return comments.map(this::convertToCommentInfoRes);
     }
 
     @Override

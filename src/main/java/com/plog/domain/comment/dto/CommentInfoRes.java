@@ -1,6 +1,7 @@
 package com.plog.domain.comment.dto;
 
 import com.plog.domain.comment.entity.Comment;
+import org.springframework.data.domain.Slice;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,9 +36,10 @@ public record CommentInfoRes(
         long postId,
         LocalDateTime createDate,
         LocalDateTime modifyDate,
-        long replyCount
+        long replyCount,
+        Slice<ReplyInfoRes> previewReplies
 ) {
-    public CommentInfoRes(Comment comment){
+    public CommentInfoRes(Comment comment, Slice<ReplyInfoRes> previewReplies) {
         this(
                 comment.getId(),
                 comment.getContent(),
@@ -46,7 +48,8 @@ public record CommentInfoRes(
                 comment.getPost().getId(),
                 comment.getCreateDate(),
                 comment.getModifyDate(),
-                (long) comment.getChildren().size()
+                comment.getReplyCount(),
+                previewReplies
         );
     }
 }

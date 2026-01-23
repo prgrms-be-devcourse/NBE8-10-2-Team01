@@ -3,11 +3,15 @@ package com.plog.domain.post.controller;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.service.PostService;
+import com.plog.global.security.CustomAuthenticationFilter;
+import com.plog.global.security.CustomUserDetailsService;
+import com.plog.global.security.JwtUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,7 +40,17 @@ class PostControllerTest {
     @MockitoBean
     private PostService postService;
 
+    @MockitoBean
+    private JwtUtils jwtUtils;
+
+    @MockitoBean
+    private CustomAuthenticationFilter customAuthenticationFilter;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
+
     @Test
+    @WithMockUser
     @DisplayName("게시글 생성 시 JSON 문자열을 직접 전달하여 검증한다")
     void createPostSuccess() throws Exception {
         // [Given]
@@ -73,7 +87,7 @@ class PostControllerTest {
                 .content("조회 본문")
                 .build();
 
-        given(postService.getPostDetail(anyLong())).willReturn(PostInfoRes.from(mockPost));
+        given(postService.getPostDetail(anyLong(), anyInt())).willReturn(PostInfoRes.from(mockPost));
 
         // [When]
         ResultActions resultActions = mvc
