@@ -7,6 +7,7 @@ import com.plog.global.exception.errorCode.ImageErrorCode;
 import com.plog.global.exception.exceptions.ImageException;
 import com.plog.global.minio.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +45,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "minio", name = "enabled", havingValue = "true")
 public class ImageServiceImpl implements ImageService {
 
     private final ObjectStorage objectStorage;

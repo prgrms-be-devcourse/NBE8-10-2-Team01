@@ -1,4 +1,4 @@
-﻿package com.plog.domain.post.service;
+package com.plog.domain.post.service;
 
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.constant.PostSearchType;
@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 /**
  * {@link PostService} 인터페이스의 기본 구현체입니다.
  * <p>

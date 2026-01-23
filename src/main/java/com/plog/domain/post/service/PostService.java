@@ -1,4 +1,4 @@
-﻿package com.plog.domain.post.service;
+package com.plog.domain.post.service;
 
 import com.plog.domain.post.constant.PostSearchType;
 import com.plog.domain.post.constant.PostSortType;

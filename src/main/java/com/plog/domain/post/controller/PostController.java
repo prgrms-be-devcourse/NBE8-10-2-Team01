@@ -1,4 +1,4 @@
-﻿package com.plog.domain.post.controller;
+package com.plog.domain.post.controller;
 
 import com.plog.domain.post.constant.PostSearchType;
 import com.plog.domain.post.constant.PostSortType;
@@ -92,6 +92,7 @@ public class PostController {
      * @param pageable 페이지/크기 정보
      * @return 검색 게시물 페이지
      */
+    @GetMapping("/search")
     public ResponseEntity<Response<Page<PostInfoRes>>> searchPosts(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "TITLE") PostSearchType type,
@@ -142,3 +143,4 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 }
+

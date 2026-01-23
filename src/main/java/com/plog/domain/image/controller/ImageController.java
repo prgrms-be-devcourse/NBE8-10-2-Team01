@@ -4,6 +4,7 @@ import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.service.ImageService;
 import com.plog.global.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping(value = "/api/images", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "minio", name = "enabled", havingValue = "true")
 public class ImageController {
 
     private final ImageService imageService;
