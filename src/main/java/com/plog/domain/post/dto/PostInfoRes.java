@@ -1,6 +1,9 @@
 package com.plog.domain.post.dto;
 
+import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.post.entity.Post;
+import org.springframework.data.domain.Slice;
+
 import java.time.LocalDateTime;
 
 /**
@@ -33,7 +36,8 @@ public record PostInfoRes(
         String summary,
         int viewCount,
         LocalDateTime createDate,
-        LocalDateTime modifyDate
+        LocalDateTime modifyDate,
+        Slice<CommentInfoRes> comments
 ) {
     /**
      * Post 엔티티 객체를 PostResponse DTO로 변환하는 정적 팩토리 메서드입니다.
@@ -49,7 +53,21 @@ public record PostInfoRes(
                 post.getSummary(),
                 post.getViewCount(),
                 post.getCreateDate(),
-                post.getModifyDate()
+                post.getModifyDate(),
+                null
+        );
+    }
+
+    public static PostInfoRes from(Post post, Slice<CommentInfoRes> comments) {
+        return new PostInfoRes(
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                post.getSummary(),
+                post.getViewCount(),
+                post.getCreateDate(),
+                post.getModifyDate(),
+                comments
         );
     }
 }

@@ -1,6 +1,7 @@
 package com.plog.domain.post.service;
 
 import com.plog.domain.post.dto.PostInfoRes;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 /**
@@ -43,7 +44,7 @@ public interface PostService {
      * @return 조회된 게시물 정보 DTO
      * @throws com.plog.global.exception.exceptions.PostException 게시물을 찾을 수 없을 때 발생
      */
-    PostInfoRes getPostDetail(Long id);
+    PostInfoRes getPostDetail(Long id, Pageable pageable);
 
     /**
      * 모든 게시물 목록을 조회합니다.

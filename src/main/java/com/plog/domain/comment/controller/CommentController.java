@@ -64,20 +64,6 @@ public class CommentController {
      * @param pageable 페이징(Paging)과 정렬(Sorting)의 '기본값'을 설정하는 설정값
      * @return 페이징된 댓글 정보와 조회 성공 메시지.
      */
-    //TODO 매핑 수정 필요
-    @GetMapping({"posts/{postId}/comments"})
-    public ResponseEntity<Response<Slice<CommentInfoRes>>> getComments(
-            @PathVariable Long postId,
-            @PageableDefault(
-                    size = CommentConstants.COMMENT_PAGE_SIZE,
-                    sort = CommentConstants.DEFAULT_SORT_FIELD,
-                    direction = Sort.Direction.ASC) Pageable pageable
-    ) {
-
-        Slice<CommentInfoRes> commentList = commentService.getCommentsByPostId(postId, pageable);
-
-        return ResponseEntity.ok(CommonResponse.success(commentList, "댓글 조회 성공"));
-    }
 
     /**
      * 해당 댓글의 대댓글들을 최대 5개씩 조회합니다.
@@ -89,7 +75,8 @@ public class CommentController {
     @GetMapping({"/comments/{commentId}/replies"})
     public ResponseEntity<Response<Slice<ReplyInfoRes>>> getReplies(
             @PathVariable Long commentId,
-            @PageableDefault(size = CommentConstants.REPLY_PAGE_SIZE,
+            @PageableDefault(
+                    size = CommentConstants.REPLY_PAGE_SIZE,
                     sort = CommentConstants.DEFAULT_SORT_FIELD,
                     direction = Sort.Direction.ASC) Pageable pageable
     ) {
