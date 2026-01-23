@@ -1,5 +1,6 @@
 package com.plog.global.security;
 
+import com.plog.domain.member.dto.MemberInfoRes;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ClaimsBuilder;
 import io.jsonwebtoken.Jwts;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.Map;
 
 /**
  * JWT의 생성 및 검증을 담당하는 클래스입니다.
@@ -48,18 +48,18 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String createAccessToken(Map<String, Object> body) {
+    public String createAccessToken(MemberInfoRes dto) {
         ClaimsBuilder claimsBuilder = Jwts.claims();
+        Claims claims = claimsBuilder
+                .add("email", dto.email())
+                .add("nickname", dto.nickname())
+                .build();
 
-        for (Map.Entry<String, Object> entry : body.entrySet()) {
-            claimsBuilder.add(entry.getKey(), entry.getValue());
-        }
-
-        Claims claims = claimsBuilder.build();
         Date issuedAt = new Date();
         Date expiration = new Date(issuedAt.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
+                .subject(String.valueOf(dto.id()))
                 .claims(claims)
                 .issuedAt(issuedAt)
                 .expiration(expiration)
@@ -72,7 +72,7 @@ public class JwtUtils {
         Date expiration = new Date(issuedAt.getTime() + refreshTokenExpiration);
 
         return Jwts.builder()
-                .claim("id", id)
+                .subject(String.valueOf(id))
                 .issuedAt(issuedAt)
                 .expiration(expiration)
                 .signWith(getSigningKey())

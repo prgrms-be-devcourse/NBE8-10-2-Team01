@@ -35,7 +35,7 @@ public class MemberServiceImpl implements MemberService {
                         "[MemberServiceImpl#findMemberWithId] can't find user by id",
                         "존재하지 않는 사용자입니다."));
 
-        return toDto(member);
+        return MemberInfoRes.from(member);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class MemberServiceImpl implements MemberService {
                         "[MemberServiceImpl#findMemberWithNickname] can't find user by nickname",
                         "존재하지 않는 사용자입니다."));
 
-        return toDto(member);
+        return MemberInfoRes.from(member);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class MemberServiceImpl implements MemberService {
         //코드의 흐름 상, save 를 일부로 명시하는 편을 좋아합니다.
         memberRepository.save(member);
 
-        return toDto(member);
+        return MemberInfoRes.from(member);
     }
 
     @Override
@@ -75,14 +75,5 @@ public class MemberServiceImpl implements MemberService {
     @Transactional(readOnly = true)
     public boolean isDuplicateNickname(String nickname) {
         return memberRepository.existsByNickname(nickname);
-    }
-
-    private MemberInfoRes toDto(Member member) {
-        return MemberInfoRes.builder()
-                .id(member.getId())
-                .email(member.getEmail())
-                .nickname(member.getNickname())
-                .createDate(member.getCreateDate())
-                .build();
     }
 }

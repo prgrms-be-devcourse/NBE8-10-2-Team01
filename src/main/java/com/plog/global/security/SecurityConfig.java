@@ -6,7 +6,6 @@ import com.plog.global.response.CommonResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +25,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -59,15 +58,32 @@ import java.util.List;
 public class SecurityConfig {
     private final CustomAuthenticationFilter customAuthenticationFilter;
     private final ObjectMapper objectMapper;
+    private final JwtUtils jwtUtils;
     private final List<String> allowedOrigins;
+    private final AuthenticationConfiguration authenticationConfiguration;
+    private final TokenResolver tokenResolver;
 
     public SecurityConfig(
             CustomAuthenticationFilter customAuthenticationFilter,
             ObjectMapper objectMapper,
-            @Value("${custom.cors.allowed-origins}") List<String> allowedOrigins) {
+            JwtUtils jwtUtils,
+            AuthenticationConfiguration authenticationConfiguration,
+            @Value("${custom.cors.allowed-origins}") List<String> allowedOrigins, TokenResolver tokenResolver) {
         this.customAuthenticationFilter = customAuthenticationFilter;
         this.objectMapper = objectMapper;
+        this.jwtUtils = jwtUtils;
+        this.authenticationConfiguration = authenticationConfiguration;
         this.allowedOrigins = allowedOrigins;
+        this.tokenResolver = tokenResolver;
+    }
+
+    private LoginFilter loginFilter() throws Exception {
+        return new LoginFilter(
+                authenticationManager(authenticationConfiguration),
+                objectMapper,
+                jwtUtils,
+                tokenResolver
+        );
     }
 
     @Bean
@@ -89,8 +105,8 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable) // 기본 로그인창 비활성화
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 미사용
-                // JWT 필터를 시큐리티 필터 체인에 등록
-                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(loginFilter(), UsernamePasswordAuthenticationFilter.class) // 로그인 처리 필터
+                .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터
                 .exceptionHandling(
                         exceptionHandling -> exceptionHandling
                                 .authenticationEntryPoint(this::handleAuthEntryPoint)

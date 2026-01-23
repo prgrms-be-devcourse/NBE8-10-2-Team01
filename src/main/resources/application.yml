@@ -39,5 +39,8 @@ custom:
     secretKey: ${SECRET_KEY}
     access-expiration: 1800000 # 30분
     refresh-expiration: 3153600000000 # 약 100년
+  cookie:
+    domain: ${COOKIE_DOMAIN:localhost}
+    secure: ${COOKIE_SECURE:false}
   cors:
     allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}

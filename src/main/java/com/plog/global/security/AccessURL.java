@@ -35,9 +35,10 @@ import java.util.List;
 public enum AccessURL {
     /** 인증 없이 모든 사용자에게 노출되는 공개 API 경로입니다. */
     PUBLIC(List.of(
-            "/api/auth/sign-up",
-            "/api/auth/sign-in",
-            "/api/auth/reissue"
+            "/api/members/sign-up",
+            "/api/members/sign-in",
+            "/api/members/logout",
+            "/api/members/reissue"
     ));
 
     private final List<String> urls;
