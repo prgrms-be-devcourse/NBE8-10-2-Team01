@@ -3,28 +3,25 @@ package com.plog.domain.image.dto;
 import com.plog.domain.member.entity.Member;
 
 /**
- * 코드에 대한 전체적인 역할을 적습니다.
+ * 프로필 이미지 업로드/조회 작업 완료 후 클라이언트에게 반환되는 응답 DTO입니다.
  * <p>
- * 코드에 대한 작동 원리 등을 적습니다.
+ * 특정 회원의 ID와 변경된(또는 조회된) 프로필 이미지의 접근 URL을 포함합니다.
+ * 프로필 이미지가 없는 경우 {@code profileImageUrl}은 null을 반환합니다.
  *
- * <p><b>상속 정보:</b><br>
- * 상속 정보를 적습니다.
+ * <p><b>주요 필드:</b><br>
+ * {@code memberId}: 프로필 이미지의 소유자인 회원 ID<br>
+ * {@code profileImageUrl}: 접근 가능한 전체 이미지 URL (이미지가 없으면 null)
  *
- * <p><b>주요 생성자:</b><br>
- * {@code ProfileImageRes(String example)} <br>
- * 주요 생성자와 그 매개변수에 대한 설명을 적습니다. <br>
+ * <p><b>사용처:</b><br>
+ * 프로필 이미지 업로드(POST), 조회(GET) API의 응답 바디로 사용됩니다.
  *
- * <p><b>빈 관리:</b><br>
- * 필요 시 빈 관리에 대한 내용을 적습니다.
- *
- * <p><b>외부 모듈:</b><br>
- * 필요 시 외부 모듈에 대한 내용을 적습니다.
- *
+ * @param memberId 회원 고유 ID
+ * @param profileImageUrl 프로필 이미지 URL (http://...)
  * @author Jaewon Ryu
- * @see
  * @since 2026-01-23
+ * @see com.plog.domain.image.controller.ProfileImageController
  */
-public record ProfileImageUploadRes(  // ← 이름 변경
+public record ProfileImageUploadRes(
                                       Long memberId,
                                       String profileImageUrl
 ) {

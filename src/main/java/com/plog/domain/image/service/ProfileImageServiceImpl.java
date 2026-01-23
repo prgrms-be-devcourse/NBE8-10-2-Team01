@@ -10,7 +10,6 @@ import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.exception.exceptions.ImageException;
 import com.plog.global.minio.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +19,31 @@ import java.util.UUID;
 import static com.plog.global.exception.errorCode.AuthErrorCode.USER_NOT_FOUND;
 
 /**
- * 프로필 이미지 관리를 담당하는 서비스 구현체입니다.
+ * 프로필 이미지 업로드 및 생명주기 관리를 담당하는 서비스 구현체입니다.
+ * <p>
+ * {@link ProfileImageService} 인터페이스를 구현하여 실제 비즈니스 로직을 수행합니다.
+ * {@link ObjectStorage}를 통해 물리적 파일을 관리하고, {@link ImageRepository}와 {@link MemberRepository}를 통해
+ * DB 메타데이터 및 회원과의 연관관계를 관리합니다.
+ * 모든 변경 작업은 {@code @Transactional} 안에서 원자적으로 수행됩니다.
+ *
+ * <p><b>상속 정보:</b><br>
+ * {@link ProfileImageService} 인터페이스를 구현합니다.
+ *
+ * <p><b>주요 생성자:</b><br>
+ * {@code ProfileImageServiceImpl(MemberRepository, ImageRepository, ObjectStorage)} <br>
+ * 롬복의 {@code @RequiredArgsConstructor}를 통해 필요한 의존성을 주입받습니다. <br>
+ *
+ * <p><b>빈 관리:</b><br>
+ * {@code @Service} 어노테이션을 통해 스프링 빈으로 등록됩니다. <br>
+ * 클래스 레벨에는 적용되지 않았으나, 메서드 레벨에서 {@code @Transactional}을 통해 트랜잭션을 관리합니다.
+ *
+ * <p><b>외부 모듈:</b><br>
+ * {@code ObjectStorage}: 추상화된 파일 저장소 인터페이스를 사용합니다 (구현체: MinioStorage). <br>
+ * {@code ImageRepository}: JPA를 통해 DB와 통신합니다. <br>
+ * {@code MemberRepository}: 회원 정보를 조회하고 업데이트합니다.
+ *
+ * @author Jaewon Ryu
+ * @since 2026-01-23
  */
 @Service
 @RequiredArgsConstructor
@@ -33,26 +56,20 @@ public class ProfileImageServiceImpl implements ProfileImageService {
     @Override
     @Transactional
     public ProfileImageUploadRes uploadProfileImage(Long memberId, MultipartFile file) {
-        // 0. 파일 검증
         validateFile(file);
 
-        // 1. 회원 조회
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AuthException(USER_NOT_FOUND,
                         "[ProfileImageServiceImpl#uploadProfileImage] can't find user by id",
                         "존재하지 않는 사용자입니다."));
 
-        // 2. 기존 프로필 이미지 삭제 (MinIO + DB)
         deleteOldProfileImage(member);
 
-        // 3. 파일명 생성 (폴더 구조화: profile/image/{memberId}/...)
         String originalFilename = file.getOriginalFilename();
         String storedName = createStoredFileName(memberId, originalFilename);
 
-        // 4. MinIO 업로드
         String accessUrl = objectStorage.upload(file, storedName);
 
-        // 5. Image 엔티티 생성 및 저장
         Image newImage = Image.builder()
                 .originalName(originalFilename)
                 .storedName(storedName)
@@ -61,7 +78,6 @@ public class ProfileImageServiceImpl implements ProfileImageService {
 
         imageRepository.save(newImage);
 
-        // 6. Member 연결
         member.updateProfileImage(newImage);
 
         return ProfileImageUploadRes.from(member);
@@ -78,7 +94,6 @@ public class ProfileImageServiceImpl implements ProfileImageService {
         return ProfileImageUploadRes.from(member);
     }
 
-    // --- Helper Methods ---
 
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty() || file.getOriginalFilename() == null) {
@@ -115,14 +130,11 @@ public class ProfileImageServiceImpl implements ProfileImageService {
         if (member.getProfileImage() != null) {
             Image oldImage = member.getProfileImage();
 
-            // MinIO 삭제 (에러 발생해도 무시하고 DB는 삭제 진행)
             try {
                 objectStorage.delete(oldImage.getStoredName());
             } catch (Exception ignored) {
-                // 로그를 안 쓰기로 했으므로 예외 무시
             }
 
-            // DB 관계 끊기 및 엔티티 삭제
             member.updateProfileImage(null);
             imageRepository.delete(oldImage);
         }
@@ -135,12 +147,10 @@ public class ProfileImageServiceImpl implements ProfileImageService {
                         "[ProfileImageServiceImpl#deleteProfileImage] can't find user",
                         "존재하지 않는 사용자입니다."));
 
-        // 기존 이미지가 없으면 그냥 조용히 리턴 (에러 아님)
         if (member.getProfileImage() == null) {
             return;
         }
 
-        // 기존 로직 재활용 (Helper Method 만들어뒀으니 편함!)
         deleteOldProfileImage(member);
     }
 }
