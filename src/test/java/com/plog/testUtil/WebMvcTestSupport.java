@@ -1,7 +1,9 @@
 package com.plog.testUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.plog.global.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -20,6 +22,9 @@ public abstract class WebMvcTestSupport {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    @MockitoBean
+    protected JwtUtils jwtUtils;
 
     protected final ObjectMapper objectMapper = new ObjectMapper();
 

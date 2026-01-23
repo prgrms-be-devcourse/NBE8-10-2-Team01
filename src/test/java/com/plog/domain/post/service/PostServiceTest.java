@@ -1,6 +1,9 @@
 package com.plog.domain.post.service;
 
 import com.plog.domain.post.entity.Post;
+import com.plog.domain.post.constant.PostSearchType;
+import com.plog.domain.post.constant.PostSortType;
+import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.repository.PostRepository;
 import com.plog.global.exception.exceptions.PostException;
 import org.junit.jupiter.api.DisplayName;
@@ -9,13 +12,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import java.util.List;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.BDDMockito.given;
@@ -152,5 +161,91 @@ public class PostServiceTest {
 
         // 예외가 발생했으므로 실제 delete 메서드는 호출되지 않아야 합니다.
         verify(postRepository, never()).delete(any(Post.class));
+    }
+
+    @Test
+    @DisplayName("제목 검색은 인기순 정렬(viewCount desc)로 조회한다")
+    void searchPostsTitlePopular_sortByViewCount() {
+        // [Given]
+        String keyword = "검색";
+        Pageable pageable = PageRequest.of(0, 5);
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .build();
+
+        Page<Post> page = new PageImpl<>(List.of(post), pageable, 1);
+        given(postRepository.findByTitleContaining(eq(keyword), any(Pageable.class)))
+                .willReturn(page);
+
+        // [When]
+        Page<PostInfoRes> result = postService.searchPosts(keyword, PostSearchType.TITLE, PostSortType.POPULAR, pageable);
+
+        // [Then]
+        assertThat(result.getContent()).hasSize(1);
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(postRepository).findByTitleContaining(eq(keyword), pageableCaptor.capture());
+        Sort sort = pageableCaptor.getValue().getSort();
+        assertThat(sort.getOrderFor("viewCount")).isNotNull();
+        assertThat(sort.getOrderFor("viewCount").getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    @DisplayName("제목 검색은 최신순 정렬(createDate desc)로 조회한다")
+    void searchPostsTitleLatest_sortByCreateDate() {
+        // [Given]
+        String keyword = "검색";
+        Pageable pageable = PageRequest.of(1, 10);
+
+        Post post = Post.builder()
+                .title("제목")
+                .content("내용")
+                .build();
+
+        Page<Post> page = new PageImpl<>(List.of(post), pageable, 1);
+        given(postRepository.findByTitleContaining(eq(keyword), any(Pageable.class)))
+                .willReturn(page);
+
+        // [When]
+        Page<PostInfoRes> result = postService.searchPosts(keyword, PostSearchType.TITLE, PostSortType.LATEST, pageable);
+
+        // [Then]
+        assertThat(result.getContent()).hasSize(1);
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(postRepository).findByTitleContaining(eq(keyword), pageableCaptor.capture());
+        Sort sort = pageableCaptor.getValue().getSort();
+        assertThat(sort.getOrderFor("createDate")).isNotNull();
+        assertThat(sort.getOrderFor("createDate").getDirection()).isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    @DisplayName("빈 키워드로 검색하면 빈 페이지를 반환하고 조회하지 않는다")
+    void searchPostsEmptyKeyword_returnsEmptyPage() {
+        // [Given]
+        Pageable pageable = PageRequest.of(0, 5);
+
+        // [When]
+        Page<PostInfoRes> result = postService.searchPosts("  ", PostSearchType.TITLE, PostSortType.LATEST, pageable);
+
+        // [Then]
+        assertThat(result).isEmpty();
+        verify(postRepository, never()).findByTitleContaining(anyString(), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("해시태그 검색은 현재 빈 결과를 반환한다")
+    void searchPostsHashtag_returnsEmptyPage() {
+        // [Given]
+        Pageable pageable = PageRequest.of(0, 5);
+
+        // [When]
+        Page<PostInfoRes> result = postService.searchPosts("태그", PostSearchType.HASHTAG, PostSortType.LATEST, pageable);
+
+        // [Then]
+        assertThat(result).isEmpty();
+        verify(postRepository, never()).findByTitleContaining(anyString(), any(Pageable.class));
     }
 }

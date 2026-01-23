@@ -3,13 +3,16 @@ package com.plog.domain.image.controller;
 import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.service.ImageService;
 import com.plog.global.security.JwtUtils;
+import com.plog.testUtil.WebMvcTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -19,6 +22,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,17 +38,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 
 @WebMvcTest(ImageController.class)
-@ActiveProfiles("test")
-class ImageControllerTest {
-
-    @Autowired
-    private MockMvc mvc;
+class ImageControllerTest extends WebMvcTestSupport {
 
     @MockitoBean
     private ImageService imageService;
-
-    @MockitoBean
-    private JwtUtils jwtUtils;
 
     @Test
     @DisplayName("이미지 업로드 성공 시 successUrls를 포함한 응답을 반환한다")
@@ -60,7 +57,7 @@ class ImageControllerTest {
         );
         given(imageService.uploadImage(any())).willReturn(mockResult);
 
-        ResultActions resultActions = mvc
+        ResultActions resultActions = mockMvc
                 .perform(
                         multipart("/api/images")
                                 .file(file)
@@ -97,7 +94,7 @@ class ImageControllerTest {
         );
         given(imageService.uploadImages(anyList())).willReturn(mockResult);
 
-        ResultActions resultActions = mvc
+        ResultActions resultActions = mockMvc
                 .perform(
                         multipart("/api/images/bulk")
                                 .file(file1)
@@ -128,7 +125,7 @@ class ImageControllerTest {
         );
         given(imageService.uploadImages(anyList())).willReturn(mockResult);
 
-        mvc.perform(multipart("/api/images/bulk").file(file1))
+        mockMvc.perform(multipart("/api/images/bulk").file(file1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.successUrls").isArray())
                 .andExpect(jsonPath("$.data.successUrls.length()").value(1))
@@ -149,7 +146,7 @@ class ImageControllerTest {
                         "지원하지 않는 파일 형식입니다."
                 ));
 
-        mvc.perform(multipart("/api/images").file(txtFile))
+        mockMvc.perform(multipart("/api/images").file(txtFile))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("fail"))
                 .andExpect(jsonPath("$.message").value("지원하지 않는 파일 형식입니다."));
@@ -158,7 +155,7 @@ class ImageControllerTest {
     @Test
     @DisplayName("파일 없이 요청하면 400 Bad Request가 발생한다")
     void uploadImageWithoutFile() throws Exception {
-        mvc.perform(multipart("/api/images"))
+        mockMvc.perform(multipart("/api/images"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Missing request part"));
     }

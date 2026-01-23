@@ -4,12 +4,18 @@ import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
+import com.plog.domain.post.constant.PostSearchType;
+import com.plog.domain.post.constant.PostSortType;
 import com.plog.domain.post.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.plog.testUtil.WebMvcTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -30,13 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * JPA, Repository, Service 빈은 로드되지 않으며, MockitoBean을 통해 주입합니다.
  */
 @WebMvcTest(PostController.class)
-@ActiveProfiles("test")
-class PostControllerTest {
+class PostControllerTest extends WebMvcTestSupport {
 
-    @Autowired
-    private MockMvc mvc;
-
-    ObjectMapper objectMapper = new ObjectMapper();
 
     @MockitoBean
     private PostService postService;
@@ -51,7 +52,7 @@ class PostControllerTest {
         given(postService.createPost(anyString(), anyString())).willReturn(mockPostId);
 
         // [When]
-        ResultActions resultActions = mvc
+        ResultActions resultActions = mockMvc
                 .perform(
                         post("/api/posts")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -80,7 +81,7 @@ class PostControllerTest {
         given(postService.getPostDetail(anyLong())).willReturn(PostInfoRes.from(mockPost));
 
         // [When]
-        ResultActions resultActions = mvc
+        ResultActions resultActions = mockMvc
                 .perform(get("/api/posts/1"))
                 .andDo(print());
 
@@ -105,7 +106,7 @@ class PostControllerTest {
         ));
 
         // [When]
-        ResultActions resultActions = mvc
+        ResultActions resultActions = mockMvc
                 .perform(get("/api/posts"))
                 .andDo(print());
 
@@ -119,14 +120,67 @@ class PostControllerTest {
     }
 
     @Test
-    @DisplayName("게시글 수정 요청 시 204 No Content를 반환한다")
+    @DisplayName("키워드 검색 요청 시 페이지 형태로 결과를 반환한다")
+    void searchPostsSuccess() throws Exception {
+        // [Given]
+        String keyword = "검색";
+
+        PostInfoRes first = new PostInfoRes(
+                1L,
+                "검색 결과 1",
+                "내용 1",
+                "요약 1",
+                10,
+                null,
+                null
+        );
+        PostInfoRes second = new PostInfoRes(
+                2L,
+                "검색 결과 2",
+                "내용 2",
+                "요약 2",
+                5,
+                null,
+                null
+        );
+
+        Page<PostInfoRes> page = new PageImpl<>(
+                List.of(first, second),
+                PageRequest.of(0, 2),
+                2
+        );
+
+        given(postService.searchPosts(eq(keyword), eq(PostSearchType.TITLE), eq(PostSortType.LATEST), any()))
+                .willReturn(page);
+
+        // [When]
+        ResultActions resultActions = mockMvc.perform(
+                get("/api/posts/search")
+                        .param("keyword", keyword)
+                        .param("type", "TITLE")
+                        .param("sort", "LATEST")
+                        .param("page", "0")
+                        .param("size", "2")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andDo(print());
+
+        // [Then]
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.content[0].title").value("검색 결과 1"))
+                .andExpect(jsonPath("$.data.content[1].title").value("검색 결과 2"))
+                .andExpect(jsonPath("$.message").value("게시글 검색 성공"));
+    }
+
     void updatePostSuccess() throws Exception {
         // [Given]
         Long postId = 1L;
         PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문");
 
         // [When]
-        ResultActions resultActions = mvc.perform(
+        ResultActions resultActions = mockMvc.perform(
                 put("/api/posts/{id}", postId)
                         .contentType(MediaType.APPLICATION_JSON)
                         // 객체를 JSON 문자열로 자동 변환
@@ -147,7 +201,7 @@ class PostControllerTest {
     @DisplayName("게시글 삭제 요청 시 성공하면 204 No Content를 반환한다")
     void deletePostSuccess() throws Exception {
         // [When]
-        ResultActions resultActions = mvc.perform(
+        ResultActions resultActions = mockMvc.perform(
                 delete("/api/posts/1")
         ).andDo(print());
 
