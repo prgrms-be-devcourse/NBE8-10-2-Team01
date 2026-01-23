@@ -27,8 +27,8 @@ spring:
         highlight_sql: false
         use_sql_comments: false
 minio:
-  enabled: false
-  endpoint: http://localhost:9000
+  enabled: ${MINIO_ENABLED:false}
+  endpoint: ${MINIO_ENDPOINT}
   access_key: ${MINIO_ACCESS_KEY}
   secret_key: ${MINIO_SECRET_KEY}
   bucket: team-bucket
