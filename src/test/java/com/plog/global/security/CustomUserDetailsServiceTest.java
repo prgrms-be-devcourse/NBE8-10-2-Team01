@@ -40,7 +40,7 @@ class CustomUserDetailsServiceTest {
     private CustomUserDetailsService userDetailsService;
 
     @Test
-    @DisplayName("사용자 조회 성공 - 이메일이 존재하면 SecurityUser를 반환한다")
+    @DisplayName("사용자 조회 성공 - 이메일이 존재하면 SecurityUser를 반환")
     void loadUserByUsername_success() {
         // given
         String email = "test@plog.com";
@@ -63,7 +63,7 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
-    @DisplayName("사용자 조회 실패 - 이메일이 없으면 AuthException(USER_NOT_FOUND)이 발생한다")
+    @DisplayName("사용자 조회 실패 - 이메일이 없으면 AuthException(USER_NOT_FOUND)이 발생")
     void loadUserByUsername_fail_notFound() {
         // given
         String email = "non-exist@plog.com";
