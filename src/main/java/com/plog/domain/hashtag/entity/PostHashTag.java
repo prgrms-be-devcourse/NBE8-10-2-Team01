@@ -22,8 +22,11 @@ public class PostHashTag extends BaseEntity {
     @JoinColumn(name = "tag_id")
     private HashTag hashTag; // 여기 타입도 HashTag
 
+    private String displayName;
+
     @Builder
-    public PostHashTag(Post post, HashTag hashTag) {
+    public PostHashTag(Post post, HashTag hashTag, String displayName) {
+        this.displayName = displayName;
         this.post = post;
         this.hashTag = hashTag;
     }
