@@ -92,7 +92,7 @@ public class PostServiceTest {
         // 리포지토리는 Page를 반환 (Page는 Slice를 상속함)
         Page<Post> mockPage = new PageImpl<>(List.of(post), pageable, 1);
 
-        given(postRepository.findAll(any(Pageable.class))).willReturn(mockPage);
+        given(postRepository.findAllWithMember(any(Pageable.class))).willReturn(mockPage);
 
         // [When]
         Slice<PostInfoRes> result = postService.getPosts(pageable);
@@ -103,7 +103,7 @@ public class PostServiceTest {
         assertThat(result.getNumber()).isEqualTo(0);
         assertThat(result.isLast()).isTrue();
 
-        verify(postRepository).findAll(pageable);
+        verify(postRepository).findAllWithMember(pageable);
     }
 
     @Test
