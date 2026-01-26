@@ -66,7 +66,7 @@ class PostControllerTest {
         Long mockPostId = 1L;
         PostCreateReq requestDto = new PostCreateReq("테스트 제목", "테스트 본문");
 
-        given(postService.createPost(anyString(), anyString())).willReturn(mockPostId);
+        given(postService.createPost(anyLong(), eq(requestDto))).willReturn(mockPostId);
 
         // [When]
         ResultActions resultActions = mvc
@@ -83,7 +83,7 @@ class PostControllerTest {
                 .andExpect(header().string("Location", "/api/posts/%d".formatted(mockPostId)))
                 .andExpect(jsonPath("$").doesNotExist());
 
-        verify(postService).createPost(eq(requestDto.title()), eq(requestDto.content()));
+        verify(postService).createPost(anyLong(), eq(requestDto));
     }
 
     @Test

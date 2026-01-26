@@ -1,5 +1,6 @@
 package com.plog.domain.post.service;
 
+import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -29,11 +30,11 @@ public interface PostService {
      * 2. 추출된 텍스트의 앞부분을 최대 150자까지 잘라내어 목록 노출용 요약본(Summary)을 생성합니다. <br>
      * 3. 게시물 상태를 'PUBLISHED'로 설정하여 데이터베이스에 영구 저장합니다.
      *
-     * @param title 게시물 제목
-     * @param content 마크다운 형식의 본문
+     * @param memberId 게시물 작성자 식별자
+     * @param req 게시물 생성 요청 정보(title, content)
      * @return 저장된 게시물의 고유 식별자(ID)
      */
-    Long createPost(String title, String content);
+    Long createPost(Long memberId, PostCreateReq req);
 
     /**
      * 특정 ID의 게시물을 상세 조회합니다.

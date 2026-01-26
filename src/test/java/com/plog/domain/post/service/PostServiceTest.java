@@ -1,6 +1,8 @@
 package com.plog.domain.post.service;
 
 import com.plog.domain.member.entity.Member;
+import com.plog.domain.member.repository.MemberRepository;
+import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
@@ -12,6 +14,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,47 +38,58 @@ public class PostServiceTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private MemberRepository memberRepository;
+
     @Test
     @DisplayName("게시글 저장 시 마크다운이 제거된 요약글이 자동 생성")
     void createPostSuccess() {
-        String title = "테스트 제목";
-        String content = "# Hello\n**Spring Boot**";
 
-        Post mockPost = Post.builder()
-                .title(title)
-                .content(content)
-                .build();
+        Long memberId = 1L;
+        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**");
+
+        Member mockMember = Member.builder().build();
+
+        ReflectionTestUtils.setField(mockMember, "id", memberId);
+
+        given(memberRepository.getReferenceById(memberId)).willReturn(mockMember);
 
         given(postRepository.save(any(Post.class)))
-                .willReturn(mockPost);
+                .willAnswer(invocation -> invocation.getArgument(0));
 
-        postService.createPost(title, content);
+        postService.createPost(memberId, requestDto);
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postRepository).save(postCaptor.capture());
 
         Post savedPost = postCaptor.getValue();
+        assertThat(savedPost.getTitle()).isEqualTo("테스트 제목");
         assertThat(savedPost.getSummary()).isEqualTo("Hello\nSpring Boot");
+        assertThat(savedPost.getMember().getId()).isEqualTo(memberId);
     }
 
     @Test
     @DisplayName("본문이 150자를 초과하면 요약글은 150자까지만 저장되고 말줄임표가 붙는다")
     void createPostSuccessSummaryTruncation() {
-        String title = "제목";
-        String longContent = "가".repeat(200);
 
-        Post mockPost = Post.builder()
-                .title(title)
-                .content(longContent)
-                .build();
+        Long memberId = 1L;
+        String longContent = "가".repeat(200);
+        PostCreateReq requestDto = new PostCreateReq("제목", longContent);
+
+        Member mockMember = Member.builder().build();
+
+        ReflectionTestUtils.setField(mockMember, "id", memberId);
+
+        given(memberRepository.getReferenceById(memberId)).willReturn(mockMember);
 
         given(postRepository.save(any(Post.class)))
-                .willReturn(mockPost);
+                .willAnswer(invocation -> invocation.getArgument(0));
 
-        postService.createPost(title, longContent);
+        postService.createPost(memberId, requestDto);
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postRepository).save(postCaptor.capture());
+
         Post savedPost = postCaptor.getValue();
 
         assertThat(savedPost.getSummary().length()).isEqualTo(153);

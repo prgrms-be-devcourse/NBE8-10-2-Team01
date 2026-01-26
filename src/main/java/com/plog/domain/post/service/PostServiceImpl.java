@@ -6,6 +6,10 @@ import com.plog.domain.comment.dto.ReplyInfoRes;
 import com.plog.domain.comment.entity.Comment;
 import com.plog.domain.comment.repository.CommentRepository;
 import com.plog.domain.comment.service.CommentService;
+import com.plog.domain.member.entity.Member;
+import com.plog.domain.member.repository.MemberRepository;
+import com.plog.domain.member.service.MemberService;
+import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.entity.PostStatus;
@@ -48,17 +52,21 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final CommentService commentService;
+    private final MemberRepository memberRepository;
 
     @Override
     @Transactional
-    public Long createPost(String title, String content) {
-        String plainText = extractPlainText(content);
+    public Long createPost(Long memberId, PostCreateReq req) {
+        Member member = memberRepository.getReferenceById(memberId);
+        String plainText = extractPlainText(req.content());
         String summary = extractSummary(plainText);
 
         Post post = Post.builder()
-                .title(title)
-                .content(content)
+                .title(req.title())
+                .content(req.content())
                 .summary(summary)
+                .member(member)
                 .status(PostStatus.PUBLISHED)
                 .build();
 
