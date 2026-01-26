@@ -196,8 +196,7 @@ class PostControllerTest {
         verify(postService).updatePost(
                 eq(getMockUser().getId()),
                 eq(postId),
-                eq(requestDto.title()),
-                eq(requestDto.content())
+                eq(requestDto)
         );
     }
 

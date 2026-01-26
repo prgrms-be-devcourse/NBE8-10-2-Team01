@@ -4,6 +4,7 @@ import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
 import com.plog.global.exception.exceptions.AuthException;
@@ -144,7 +145,7 @@ public class PostServiceTest {
         String newContent = "수정된 본문 내용입니다. 이 내용은 150자 미만이므로 그대로 요약이 됩니다.";
 
         // [When]
-        postService.updatePost(memberId, postId, newTitle, newContent);
+        postService.updatePost(memberId, postId, new PostUpdateReq(newTitle, newContent));
 
         // [Then]
         // 더티 체킹에 의해 변경될 엔티티의 상태를 검증합니다.
@@ -161,7 +162,7 @@ public class PostServiceTest {
         given(postRepository.findById(anyLong())).willReturn(Optional.empty());
 
         // [When & Then]
-        assertThatThrownBy(() -> postService.updatePost(memberId, 99L, "제목", "내용"))
+        assertThatThrownBy(() -> postService.updatePost(memberId, 99L, new PostUpdateReq("제목", "내용")))
                 .isInstanceOf(PostException.class)
                 .hasMessageContaining("존재하지 않는 게시물입니다.");
     }
@@ -183,7 +184,7 @@ public class PostServiceTest {
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
         // [When & Then]
-        assertThatThrownBy(() -> postService.updatePost(otherMemberId, postId, "제목", "내용"))
+        assertThatThrownBy(() -> postService.updatePost(otherMemberId, postId, new PostUpdateReq("제목", "내용")))
                 .isInstanceOf(AuthException.class)
                 .hasMessageContaining("수정할 권한이 없습니다.");
     }

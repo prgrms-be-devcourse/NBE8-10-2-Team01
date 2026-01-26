@@ -115,7 +115,7 @@ public class PostController {
             @PathVariable Long id,
             @Valid @RequestBody PostUpdateReq request) {
 
-        postService.updatePost(user.getId(), id, request.title(), request.content());
+        postService.updatePost(user.getId(), id, request);
 
         return ResponseEntity.noContent().build();
     }

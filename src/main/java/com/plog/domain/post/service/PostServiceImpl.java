@@ -11,6 +11,7 @@ import com.plog.domain.member.repository.MemberRepository;
 import com.plog.domain.member.service.MemberService;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.entity.PostStatus;
 import com.plog.domain.post.repository.PostRepository;
@@ -120,7 +121,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void updatePost(Long memberId, Long id, String title, String content) {
+    public void updatePost(Long memberId, Long id, PostUpdateReq req) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#updatePost] can't find post", "존재하지 않는 게시물입니다."));
@@ -131,10 +132,10 @@ public class PostServiceImpl implements PostService {
                     "해당 게시물을 수정할 권한이 없습니다.");
         }
 
-        String plainText = extractPlainText(content);
+        String plainText = extractPlainText(req.content());
         String summary = extractSummary(plainText);
 
-        post.update(title, content, summary);
+        post.update(req.title(), req.content(), summary);
     }
 
     @Override
