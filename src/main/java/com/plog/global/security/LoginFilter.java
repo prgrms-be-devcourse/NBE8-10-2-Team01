@@ -105,7 +105,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
                 .build();
 
         String accessToken = jwtUtils.createAccessToken(memberInfo);
-        String refreshToken = jwtUtils.createRefreshToken(user.getId());
+        String refreshToken = jwtUtils.createRefreshToken(user.getEmail());
         tokenResolver.setHeader(response, accessToken);
         tokenResolver.setCookie(response, refreshToken);
 

@@ -4,6 +4,8 @@ package com.plog.global.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * 애플리케이션 전역에서 사용되는 공통 인프라 빈을 설정하는 클래스입니다.
@@ -33,5 +35,15 @@ public class AppConfig {
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
+    }
+
+    /**
+     * 사용자의 비밀번호를 암호화하기 위한 PasswordEncoder를 Bean으로 등록합니다.
+     *
+     * @return BCrypt 알고리즘이 적용된 PasswordEncoder 객체
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
