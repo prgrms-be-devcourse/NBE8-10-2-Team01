@@ -1,6 +1,8 @@
 package com.plog.global.security;
 
 
+import com.plog.domain.member.dto.MemberInfoRes;
+import com.plog.domain.member.service.AuthService;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -13,7 +15,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -50,6 +51,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
+    private final TokenResolver tokenResolver;
+    private final AuthService authService;
 
     /**
      * 필터의 핵심 로직을 수행하며, 토큰 유무에 따라 인증 정보를 컨텍스트에 저장합니다.
@@ -58,34 +61,14 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = resolveToken(request);
+        String token = tokenResolver.resolveAccessToken(request);
 
         try {
             if (token != null) {
-                Claims claims = jwtUtils.parseToken(token);
-                Long id = claims.get("id", Long.class);
-                String email = claims.getSubject();
-                String nickname = claims.get("nickname", String.class);
-                if (nickname == null) nickname = "";
-
-                SecurityUser user = SecurityUser.securityUserBuilder()
-                        .id(id)
-                        .email(email)
-                        .password("")
-                        .nickname(nickname)
-                        .authorities(List.of())
-                        .build();
-
-                Authentication auth = new UsernamePasswordAuthenticationToken(
-                        user,
-                        null,
-                        user.getAuthorities()
-                );
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                authenticate(token);
             }
         } catch (ExpiredJwtException e) {
-            request.setAttribute("exception", AuthErrorCode.TOKEN_EXPIRED);
-
+            handleAccessTokenReissue(request, response);
         } catch (Exception e) {
             request.setAttribute("exception", AuthErrorCode.TOKEN_INVALID);
         }
@@ -94,17 +77,42 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Header 에서 JWT 토큰을 추출합니다.
      *
-     * @param request HTTP 요청 객체
-     * @return 추출된 토큰 문자열, 없으면 null
+     * @param token
      */
-    private String resolveToken(HttpServletRequest request) {
-        // Authorization Header 확인
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    private void authenticate(String token) {
+        Claims claims = jwtUtils.parseToken(token);
+        Long id = Long.valueOf(claims.getSubject());
+        String email = claims.get("email", String.class);
+        String nickname = claims.get("nickname", String.class);
+
+        SecurityUser user = SecurityUser.securityUserBuilder()
+                .id(id)
+                .email(email)
+                .password("")
+                .nickname(nickname != null ? nickname : "")
+                .authorities(List.of())
+                .build();
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    // TODO: refresh token rotation 추후 도입
+    private void handleAccessTokenReissue(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = tokenResolver.resolveRefreshToken(request);
+
+        if (refreshToken != null) {
+            Claims claims = jwtUtils.parseToken(refreshToken);
+            Long memberId = Long.valueOf(claims.getSubject());
+
+            MemberInfoRes memberInfo = authService.findMemberWithId(memberId);
+            String newAccess = jwtUtils.createAccessToken(memberInfo);
+            tokenResolver.setHeader(response, newAccess);
+
+            authenticate(newAccess);
+        } else {
+            request.setAttribute("exception", AuthErrorCode.TOKEN_EXPIRED);
         }
-        return null;
     }
 }

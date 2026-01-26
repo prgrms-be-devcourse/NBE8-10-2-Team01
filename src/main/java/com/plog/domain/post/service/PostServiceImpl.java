@@ -75,11 +75,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostInfoRes> getPosts() {
-        return postRepository.findAll(Sort.by(Sort.Direction.DESC, "id"))
-                .stream()
-                .map(PostInfoRes::from)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Slice<PostInfoRes> getPosts(Pageable pageable) {
+        return postRepository.findAllWithMember(pageable)
+                .map(PostInfoRes::from);
     }
 
     @Override
@@ -105,6 +104,14 @@ public class PostServiceImpl implements PostService {
 
         // 2. 게시물 삭제
         postRepository.delete(post);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<PostInfoRes> getPostsByMember(Long memberId, Pageable pageable) {
+        Slice<Post> postSlice = postRepository.findAllByMemberId(memberId, pageable);
+
+        return postSlice.map(PostInfoRes::from);
     }
 
     /**

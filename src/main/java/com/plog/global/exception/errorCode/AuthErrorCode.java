@@ -20,12 +20,19 @@ import org.springframework.http.HttpStatus;
  */
 @AllArgsConstructor
 public enum AuthErrorCode implements ErrorCode {
+    // 조회 및 기본 관리
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "can't get user"),
     USER_CREATE_FAIL(HttpStatus.BAD_REQUEST, "failed to createWithCategory user"),
     USER_UPDATE_FAIL(HttpStatus.BAD_REQUEST, "failed to update user"),
     USER_DELETE_FAIL(HttpStatus.BAD_REQUEST, "failed to delete user"),
+
+    // 회원가입 및 로그인
     SIGNUP_FAIL(HttpStatus.BAD_REQUEST, "failed to sign up"),
     LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "failed to login"),
+    USER_ALREADY_EXIST(HttpStatus.CONFLICT, "user already exists."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "invalid email or password"),
+
+    // 인증 및 권한
     USER_AUTH_FAIL(HttpStatus.FORBIDDEN, "user authorization failed"),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "token has expired"),
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "invalid token"),

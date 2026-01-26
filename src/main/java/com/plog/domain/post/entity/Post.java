@@ -1,5 +1,6 @@
 package com.plog.domain.post.entity;
 
+import com.plog.domain.member.entity.Member;
 import com.plog.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,6 +48,10 @@ public class Post extends BaseEntity{
 
     @Builder.Default
     private int viewCount = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     public void incrementViewCount() {
         this.viewCount++;

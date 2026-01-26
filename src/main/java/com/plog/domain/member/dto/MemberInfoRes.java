@@ -1,5 +1,6 @@
 package com.plog.domain.member.dto;
 
+import com.plog.domain.member.entity.Member;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -17,4 +18,13 @@ public record MemberInfoRes(
         String nickname,
         LocalDateTime createDate
 ) {
+
+    public static MemberInfoRes from(Member member) {
+        return MemberInfoRes.builder()
+                .id(member.getId())
+                .email(member.getEmail())
+                .nickname(member.getNickname())
+                .createDate(member.getCreateDate())
+                .build();
+    }
 }

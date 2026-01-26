@@ -3,6 +3,8 @@ package com.plog.global.security;
 
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
+import com.plog.global.exception.errorCode.AuthErrorCode;
+import com.plog.global.exception.exceptions.AuthException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -45,7 +47,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 이메일의 사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_NOT_FOUND,
+                        "[CustomUserDetailsService#loadUserByUsername] can't find user by email: " + email,
+                        "존재하지 않는 사용자입니다."
+                ));
 
         return SecurityUser.securityUserBuilder()
                 .id(member.getId())
