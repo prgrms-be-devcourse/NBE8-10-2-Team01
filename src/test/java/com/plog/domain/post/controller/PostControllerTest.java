@@ -1,5 +1,7 @@
 package com.plog.domain.post.controller;
 
+import com.plog.domain.comment.dto.CommentInfoRes;
+import com.plog.domain.member.service.AuthService;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.dto.PostUpdateReq;
@@ -7,6 +9,7 @@ import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.service.PostService;
 import com.plog.global.security.JwtUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.plog.global.security.TokenResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -48,6 +52,12 @@ class PostControllerTest {
 
     @MockitoBean
     private JwtUtils jwtUtils;
+
+    @MockitoBean
+    private TokenResolver tokenResolver;
+
+    @MockitoBean
+    private AuthService authService;
 
     @Test
     @DisplayName("게시글 생성 시 DTO 객체를 JSON으로 변환하여 요청을 검증한다")
@@ -85,7 +95,9 @@ class PostControllerTest {
                 .content("조회 본문")
                 .build();
 
-        given(postService.getPostDetail(anyLong())).willReturn(PostInfoRes.from(mockPost));
+        Slice<CommentInfoRes> mockComments = new SliceImpl<>(Collections.emptyList());
+
+        given(postService.getPostDetail(anyLong(), any(Pageable.class))).willReturn(PostInfoRes.from(mockPost));
 
         // [When]
         ResultActions resultActions = mvc
@@ -188,7 +200,7 @@ class PostControllerTest {
 
         // PostInfoRes 데이터 준비
         PostInfoRes res = new PostInfoRes(
-                100L, "제목", "본문", "요약", 5, now, now
+                100L, "제목", "본문", "요약", 5, now, now, null
         );
 
         // SliceImpl을 사용하여 서비스 반환값 모킹 (데이터 1개, 다음 페이지 없음)
