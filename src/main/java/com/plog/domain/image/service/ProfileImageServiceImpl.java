@@ -12,7 +12,9 @@ import com.plog.global.minio.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.util.UUID;
 
@@ -56,11 +58,10 @@ public class ProfileImageServiceImpl implements ProfileImageService {
     @Override
     @Transactional
     public ProfileImageUploadRes uploadProfileImage(Long memberId, MultipartFile file) {
+        // 1. 사용자 검증 및 조회
         validateFile(file);
-
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AuthException(USER_NOT_FOUND,
-                        "[ProfileImageServiceImpl#uploadProfileImage] can't find user by id",
                         "존재하지 않는 사용자입니다."));
 
         deleteOldProfileImage(member);
@@ -70,26 +71,35 @@ public class ProfileImageServiceImpl implements ProfileImageService {
 
         String accessUrl = objectStorage.upload(file, storedName);
 
-        try {
-            Image newImage = Image.builder()
-                    .originalName(originalFilename)
-                    .storedName(storedName)
-                    .accessUrl(accessUrl)
-                    .build();
-
-            imageRepository.save(newImage);
-            member.updateProfileImage(newImage);
-
-            return ProfileImageUploadRes.from(member);
-
-        } catch (Exception e) {
-            try {
-                objectStorage.delete(storedName);
-            } catch (Exception ignored) {
-            }
-            throw e;
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    // 트랜잭션이 롤백된 경우에만 실행
+                    if (status == STATUS_ROLLED_BACK) {
+                        try {
+                            objectStorage.delete(storedName);
+                        } catch (Exception e) {
+                            // 파일 삭제 중 에러가 나더라도, 원래 발생한 DB 트랜잭션 에러를 덮어쓰지 않도록 예외 무시
+                        }
+                    }
+                }
+            });
         }
+
+        // 5. DB 저장
+        Image newImage = Image.builder()
+                .originalName(originalFilename)
+                .storedName(storedName)
+                .accessUrl(accessUrl)
+                .build();
+
+        imageRepository.save(newImage);
+        member.updateProfileImage(newImage);
+
+        return ProfileImageUploadRes.from(member);
     }
+
     @Override
     @Transactional(readOnly = true)
     public ProfileImageUploadRes getProfileImage(Long memberId) {

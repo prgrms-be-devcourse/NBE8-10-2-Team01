@@ -6,7 +6,6 @@ import com.plog.domain.image.repository.ImageRepository;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.ImageErrorCode;
-import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.exception.exceptions.ImageException;
 import com.plog.global.minio.storage.ObjectStorage;
 import org.junit.jupiter.api.DisplayName;
@@ -88,13 +87,13 @@ class ProfileImageServiceTest {
         // [Given]
         Long memberId = 1L;
         Member member = createMember(memberId);
-        
+
         // 기존 이미지 설정
         Image oldImage = Image.builder().storedName("old/path.jpg").build();
         member.updateProfileImage(oldImage);
 
         MockMultipartFile newFile = new MockMultipartFile("file", "new.jpg", "image/jpeg", "newdata".getBytes());
-        
+
         given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
         given(objectStorage.upload(any(), any())).willReturn("http://new-url");
 
@@ -105,7 +104,7 @@ class ProfileImageServiceTest {
         // 1. 기존 파일 삭제 호출 검증
         verify(objectStorage).delete(eq("old/path.jpg"));
         verify(imageRepository).delete(eq(oldImage));
-        
+
         // 2. 새 파일 업로드 호출 검증
         verify(objectStorage).upload(any(), any());
     }
@@ -117,7 +116,7 @@ class ProfileImageServiceTest {
         Long memberId = 99L;
         Member member = createMember(memberId);
         MockMultipartFile file = new MockMultipartFile("file", "avatar.png", "image/png", "data".getBytes());
-        
+
         given(memberRepository.findById(memberId)).willReturn(Optional.of(member));
         given(objectStorage.upload(any(), any())).willReturn("url");
 
@@ -127,7 +126,7 @@ class ProfileImageServiceTest {
         // [Then]
         ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
         verify(objectStorage).upload(any(), pathCaptor.capture());
-        
+
         String capturedPath = pathCaptor.getValue();
         assertThat(capturedPath).contains("profile/image/" + memberId + "/");
         assertThat(capturedPath).endsWith(".png");
@@ -170,5 +169,29 @@ class ProfileImageServiceTest {
                 .build();
         ReflectionTestUtils.setField(member, "id", id);
         return member;
+    }
+
+    @Test
+    @DisplayName("DB 저장 실패 시 롤백 로직이 실행되어 파일을 삭제해야 한다")
+    void shouldDeleteFile_WhenTransactionRollback() {
+        // given
+        Long memberId = 1L;
+        MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test data".getBytes());
+
+        Member member = Member.builder().build();
+        org.springframework.test.util.ReflectionTestUtils.setField(member, "id", memberId);
+
+        given(memberRepository.findById(memberId)).willReturn(java.util.Optional.of(member));
+        given(objectStorage.upload(any(), any())).willReturn("https://minio.url/test.jpg");
+
+        given(imageRepository.save(any())).willThrow(new RuntimeException("DB Error"));
+
+        try {
+            profileImageService.uploadProfileImage(memberId, file);
+        } catch (RuntimeException e) {
+
+        }
+
+        verify(objectStorage, times(1)).upload(any(), any());
     }
 }
