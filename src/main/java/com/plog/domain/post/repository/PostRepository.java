@@ -1,8 +1,14 @@
 package com.plog.domain.post.repository;
 
 import com.plog.domain.post.entity.Post;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * Post 엔티티에 대한 데이터 액세스 기능을 제공하는 인터페이스입니다.
@@ -26,4 +32,15 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+    /**
+     * 전체 게시글 조회: 작성자(Member)를 한 번의 쿼리로 함께 가져옵니다.
+     */
+    @Query("select p from Post p join fetch p.member where p.status = 'PUBLISHED'")
+    Slice<Post> findAllWithMember(Pageable pageable);
+
+    /**
+     * 특정 회원 게시글 조회: memberId로 필터링하면서 작성자 정보를 함께 가져옵니다.
+     */
+    @Query("select p from Post p join fetch p.member where p.member.id = :memberId")
+    Slice<Post> findAllByMemberId(@Param("memberId") Long memberId, Pageable pageable);
 }

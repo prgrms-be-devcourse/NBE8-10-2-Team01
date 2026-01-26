@@ -10,13 +10,13 @@ import com.plog.global.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 /**
  * 게시물 관련 HTTP 요청을 처리하는 컨트롤러 클래스입니다.
@@ -79,13 +79,19 @@ public class PostController {
     }
 
     /**
-     * 모든 게시물 목록을 최신순으로 조회합니다.
+     * 모든 게시물 목록을 페이징(Slice)하여 조회합니다.
+     * <p>
+     * {@link Slice}를 사용하여 전체 카운트 쿼리 없이 다음 페이지 존재 여부만 확인합니다.
+     * 이는 무한 스크롤 구현에 최적화된 방식입니다.
      *
-     * @return 게시물 리스트와 성공 메시지를 포함한 공통 응답 객체
+     * @param pageable 페이징 및 정렬 정보 (기본값: 10개씩, 생성일 내림차순)
+     * @return 게시물 데이터 슬라이스와 성공 메시지를 포함한 공통 응답 객체
      */
     @GetMapping
-    public ResponseEntity<Response<List<PostInfoRes>>> getPosts() {
-        List<PostInfoRes> posts = postService.getPosts();
+    public ResponseEntity<Response<Slice<PostInfoRes>>> getPosts(
+            @PageableDefault(size = 10, sort = "createDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Slice<PostInfoRes> posts = postService.getPosts(pageable);
         return ResponseEntity.ok(CommonResponse.success(posts, "게시글 목록 조회 성공"));
     }
 
@@ -127,5 +133,26 @@ public class PostController {
         postService.deletePost(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 특정 사용자가 작성한 게시물 목록을 페이징(Slice)하여 조회합니다.
+     * <p>
+     * {@link Slice} 방식을 사용하여 전체 게시물 개수(Count)를 조회하지 않고,
+     * 다음 페이지 존재 여부만을 확인하여 반환합니다. 이는 무한 스크롤이나 '더 보기'
+     * 형태의 UI 구현에 최적화되어 있습니다.
+     *
+     * @param memberId 조회할 사용자의 고유 식별자(ID)
+     * @param pageable 페이징 및 정렬 정보 (기본값: 10개씩, 생성일 내림차순 정렬)
+     * @return 게시물 데이터 슬라이스와 성공 메시지를 포함한 공통 응답 객체
+     */
+    @GetMapping("/members/{memberId}")
+    public ResponseEntity<Response<Slice<PostInfoRes>>> getPostsByMember(
+            @PathVariable Long memberId,
+            @PageableDefault(size = 10, sort = "createDate", direction = Sort.Direction.DESC) Pageable pageable
+            ) {
+        Slice<PostInfoRes> posts = postService.getPostsByMember(memberId, pageable);
+
+        return ResponseEntity.ok(CommonResponse.success(posts, "사용자 게시글 목록 조회 성공"));
     }
 }

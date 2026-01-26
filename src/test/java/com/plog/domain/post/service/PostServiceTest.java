@@ -1,5 +1,7 @@
 package com.plog.domain.post.service;
 
+import com.plog.domain.member.entity.Member;
+import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
 import com.plog.global.exception.exceptions.PostException;
@@ -8,7 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import java.util.Optional;
 
@@ -75,6 +81,31 @@ public class PostServiceTest {
         assertThat(savedPost.getSummary().length()).isEqualTo(153);
         assertThat(savedPost.getSummary()).endsWith("...");
     }
+
+    @Test
+    @DisplayName("전체 게시글 조회 시 리포지토리의 결과를 Slice DTO로 변환하여 반환한다")
+    void getPostsSuccess() {
+        // [Given]
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
+        Post post = Post.builder().title("테스트 제목").content("테스트 내용").build();
+
+        // 리포지토리는 Page를 반환 (Page는 Slice를 상속함)
+        Page<Post> mockPage = new PageImpl<>(List.of(post), pageable, 1);
+
+        given(postRepository.findAllWithMember(any(Pageable.class))).willReturn(mockPage);
+
+        // [When]
+        Slice<PostInfoRes> result = postService.getPosts(pageable);
+
+        // [Then]
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).title()).isEqualTo("테스트 제목");
+        assertThat(result.getNumber()).isEqualTo(0);
+        assertThat(result.isLast()).isTrue();
+
+        verify(postRepository).findAllWithMember(pageable);
+    }
+
     @Test
     @DisplayName("게시글 수정 시 본문에 맞춰 요약본이 새롭게 생성되어야 한다")
     void updatePostSuccess() {
@@ -152,5 +183,45 @@ public class PostServiceTest {
 
         // 예외가 발생했으므로 실제 delete 메서드는 호출되지 않아야 합니다.
         verify(postRepository, never()).delete(any(Post.class));
+    }
+
+    @Test
+    @DisplayName("회원 ID로 조회 시 엔티티가 PostInfoRes의 모든 필드로 올바르게 변환되어야 한다")
+    void getPostsByMemberSuccess() {
+        // [Given]
+        Long memberId = 1L;
+        // 페이징 정보 설정 (0페이지, 10개씩 조회)
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Post post = Post.builder()
+                .title("테스트 제목")
+                .content("테스트 본문")
+                .summary("테스트 요약")
+                .viewCount(10)
+                .build();
+
+        // SliceImpl을 사용하여 리포지토리 반환값 모킹 (데이터 1개, 다음 페이지 없음)
+        Slice<Post> mockSlice = new SliceImpl<>(List.of(post), pageable, false);
+
+        given(postRepository.findAllByMemberId(memberId, pageable))
+                .willReturn(mockSlice);
+
+        // [When]
+        Slice<PostInfoRes> result = postService.getPostsByMember(memberId, pageable);
+
+        // [Then]
+        // 1. Slice 자체에 대한 검증
+        assertThat(result.getContent()).hasSize(1); // 실제 데이터 개수 확인
+        assertThat(result.hasNext()).isFalse();    // 다음 페이지 여부 확인
+
+        // 2. DTO 필드 매핑 검증 (첫 번째 요소 추출)
+        PostInfoRes dto = result.getContent().get(0);
+        assertThat(dto.title()).isEqualTo("테스트 제목");
+        assertThat(dto.content()).isEqualTo("테스트 본문");
+        assertThat(dto.summary()).isEqualTo("테스트 요약");
+        assertThat(dto.viewCount()).isEqualTo(10);
+
+        // 3. 리포지토리 호출 확인 (새로운 메서드와 파라미터 기준)
+        verify(postRepository).findAllByMemberId(memberId, pageable);
     }
 }
