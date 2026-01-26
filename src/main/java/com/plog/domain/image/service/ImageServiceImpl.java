@@ -124,4 +124,36 @@ public class ImageServiceImpl implements ImageService {
 
         return new ImageUploadRes(successUrls, failedFilenames);
     }
+    @Override
+    @Transactional
+    public void deleteImage(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        String storedName = objectStorage.parsePath(imageUrl);
+
+
+        Image image = imageRepository.findByAccessUrl(imageUrl)
+                .orElseThrow(() -> new ImageException(
+                        ImageErrorCode.IMAGE_NOT_FOUND,
+                        "[ImageServiceImpl#deleteImage] image not found in DB. url=" + imageUrl,
+                        "해당 이미지를 찾을 수 없습니다."
+                ));
+
+        objectStorage.delete(storedName);
+
+        imageRepository.delete(image);
+    }
+
+    @Override
+    @Transactional
+    public void deleteImages(List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return;
+        }
+        for (String url : imageUrls) {
+            deleteImage(url);
+        }
+    }
 }

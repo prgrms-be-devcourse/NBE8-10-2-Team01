@@ -33,4 +33,16 @@ public interface ImageService {
      */
     ImageUploadRes uploadImages(List<MultipartFile> files);
 
+
+    /**
+     * 이미지 URL 하나를 받아 해당 이미지를 삭제합니다. (단일 삭제)
+     */
+    void deleteImage(String imageUrl);
+
+
+    /**
+     * 이미지 URL 리스트를 받아 여러 이미지를 한 번에 삭제합니다. (일괄 삭제)
+     */
+    void deleteImages(List<String> imageUrls);
+
 }
