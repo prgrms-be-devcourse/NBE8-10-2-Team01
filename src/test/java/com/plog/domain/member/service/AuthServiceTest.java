@@ -7,6 +7,7 @@ import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.security.JwtUtils;
+import com.plog.global.security.TokenStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,11 @@ class AuthServiceTest {
     private MemberRepository memberRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private JwtUtils jwtUtils;
+    @Mock
+    private TokenStore tokenStore;
+
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -138,5 +144,30 @@ class AuthServiceTest {
         // then
         assertThat(ex.getErrorCode()).isEqualTo(AuthErrorCode.USER_NOT_FOUND);
         assertThat(ex.getLogMessage()).contains("[AuthServiceImpl#findMemberWithId]");
+    }
+
+    @Test
+    @DisplayName("로그아웃 시도 - 토큰이 만료되었거나 유효하지 않아도 예외 없이 종료")
+    void logout_fail_invalidToken() {
+        // given
+        String invalidToken = "invalid_token";
+        given(jwtUtils.parseToken(invalidToken)).willThrow(new RuntimeException("parsing fail"));
+
+        // when
+        authService.logout(invalidToken);
+
+        // then
+        verify(tokenStore, never()).delete(anyString());
+    }
+
+    @Test
+    @DisplayName("로그아웃 시도 - 토큰이 null이면 아무 작업도 수행하지 않음")
+    void logout_nullToken() {
+        // when
+        authService.logout(null);
+
+        // then
+        verify(jwtUtils, never()).parseToken(anyString());
+        verify(tokenStore, never()).delete(anyString());
     }
 }

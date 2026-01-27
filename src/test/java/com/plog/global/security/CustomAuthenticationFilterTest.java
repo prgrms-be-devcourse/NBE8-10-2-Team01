@@ -2,7 +2,6 @@ package com.plog.global.security;
 
 
 import com.plog.domain.member.dto.MemberInfoRes;
-import com.plog.domain.member.service.AuthService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -41,9 +40,10 @@ class CustomAuthenticationFilterTest {
     private JwtUtils jwtUtils;
     @Mock private TokenResolver tokenResolver;
     @Mock private CustomUserDetailsService customUserDetailsService;
+    @Mock private TokenStore tokenStore;
 
     @Test
-    @DisplayName("자동 재발급 - Access Token 만료 시 Refresh Token이 유효하면 새 토큰을 헤더에 설정한다")
+    @DisplayName("자동 재발급 - AT 만료 시 RT가 화이트리스트에 존재하면 새 토큰을 설정한다")
     void handleAccessTokenReissue_success() throws Exception {
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -64,6 +64,7 @@ class CustomAuthenticationFilterTest {
         Claims rtClaims = mock(Claims.class);
         given(rtClaims.getSubject()).willReturn(email);
         given(jwtUtils.parseToken(validRt)).willReturn(rtClaims);
+        given(tokenStore.get(email)).willReturn(validRt);
 
         // 서비스 및 유틸리티 모킹
         SecurityUser user = SecurityUser.securityUserBuilder()
@@ -71,17 +72,11 @@ class CustomAuthenticationFilterTest {
         given(customUserDetailsService.loadUserByUsername(email)).willReturn(user);
         given(jwtUtils.createAccessToken(any(MemberInfoRes.class))).willReturn(newAt);
 
-        Claims newAtClaims = mock(Claims.class);
-        given(newAtClaims.getSubject()).willReturn(email);
-        given(newAtClaims.get("id", Long.class)).willReturn(1L);
-        given(newAtClaims.get("nickname", String.class)).willReturn("plogger");
-        given(jwtUtils.parseToken(newAt)).willReturn(newAtClaims);
-
         // when
         filter.doFilterInternal(request, response, filterChain);
 
         // then
-        verify(tokenResolver).setHeader(response, "new_access_token");
+        verify(tokenResolver).setHeader(response, newAt);
         verify(filterChain).doFilter(request, response);
     }
 }
