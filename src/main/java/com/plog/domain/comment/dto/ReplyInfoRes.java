@@ -27,7 +27,9 @@ public record ReplyInfoRes(
         String content,
         long parentCommentId,
         long authorId,
-        String authorNickname,
+        String nickname,
+        String email,
+        String profileUrl,
         LocalDateTime createDate,
         LocalDateTime modifyDate
 ) {
@@ -38,6 +40,10 @@ public record ReplyInfoRes(
                 comment.getParent().getId(),
                 comment.getAuthor().getId(),
                 comment.getAuthor().getNickname(),
+                comment.getAuthor().getEmail(),
+                (comment.getAuthor().getProfileImage() != null)
+                        ? comment.getAuthor().getProfileImage().getAccessUrl()
+                        : null,
                 comment.getCreateDate(),
                 comment.getModifyDate()
         );

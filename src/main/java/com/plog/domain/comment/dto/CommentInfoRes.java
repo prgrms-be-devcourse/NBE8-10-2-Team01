@@ -14,7 +14,7 @@ import java.util.List;
  * </p>
  *
  * <p><b>주요 생성자:</b><br>
- * {@link #CommentInfoRes(Comment)} <br>
+ * {@link #CommentInfoRes(Comment, Slice<ReplyInfoRes>)} <br>
  * 댓글 엔티티 {@link Comment}를 기반으로
  * 클라이언트 응답에 필요한 데이터만을 매핑하여 생성한다.
  * </p>
@@ -32,7 +32,9 @@ public record CommentInfoRes(
         long id,
         String content,
         long authorId,
-        String authorNickname,
+        String nickname,
+        String email,
+        String profileUrl,
         long postId,
         LocalDateTime createDate,
         LocalDateTime modifyDate,
@@ -45,6 +47,10 @@ public record CommentInfoRes(
                 comment.getContent(),
                 comment.getAuthor().getId(),
                 comment.getAuthor().getNickname(),
+                comment.getAuthor().getEmail(),
+                (comment.getAuthor().getProfileImage() != null)
+                        ? comment.getAuthor().getProfileImage().getAccessUrl()
+                        : null,
                 comment.getPost().getId(),
                 comment.getCreateDate(),
                 comment.getModifyDate(),

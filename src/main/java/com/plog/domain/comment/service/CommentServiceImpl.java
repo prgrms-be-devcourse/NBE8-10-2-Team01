@@ -106,7 +106,7 @@ public class CommentServiceImpl implements CommentService {
                 Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
         );
 
-        Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(postId, pageable);
+        Slice<Comment> comments = commentRepository.findCommentsWithMemberAndImageByPostId(postId, pageable);
 
         return comments.map(this::convertToCommentInfoRes);
     }
@@ -126,7 +126,7 @@ public class CommentServiceImpl implements CommentService {
                 Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
         );
 
-        Slice<Comment> replies = commentRepository.findByParentId(commentId, pageable);
+        Slice<Comment> replies = commentRepository.findRepliesWithMemberAndImageByParentId(commentId, pageable);
 
         return replies.map(ReplyInfoRes::new);
     }

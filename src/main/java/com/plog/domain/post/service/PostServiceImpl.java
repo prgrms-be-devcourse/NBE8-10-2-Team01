@@ -90,7 +90,7 @@ public class PostServiceImpl implements PostService {
                 Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
         );
 
-        Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(id, pageable);
+        Slice<Comment> comments = commentRepository.findCommentsWithMemberAndImageByPostId(id, pageable);
 
         Slice<CommentInfoRes> commentResSlice = comments.map(this::convertToCommentInfoRes);
 
