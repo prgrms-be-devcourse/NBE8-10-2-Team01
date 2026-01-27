@@ -1,6 +1,7 @@
 package com.plog.global.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.response.CommonResponse;
 import jakarta.servlet.ServletException;
@@ -24,7 +25,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,19 +34,21 @@ import java.util.List;
  * <p>
  * HTTP 요청에 대한 보안 필터 체인을 정의하며, JWT 인증 방식에 맞게
  * 세션 정책을 STATELESS로 설정하고 CORS/CSRF 등 보안 옵션을 조정합니다.
+ * 로그인 처리({@link LoginFilter})와 요청 검증({@link CustomAuthenticationFilter}) 필터를
+ * 등록해 토큰 기반 인증/인가 프로세스를 완성합니다.
  *
  * <p><b>상속 정보:</b><br>
  * 별도의 상속 없이 Spring Security 6.x 버전의 컴포넌트 기반 설정을 따릅니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code SecurityConfig(CustomAuthenticationFilter customAuthenticationFilter)}<br>
- * 작성된 사용자 정의 인증 필터를 주입받아 필터 체인에 등록합니다.
+ * {@code SecurityConfig(...)}<br>
+ * 인증 관리에 필요한 매니저, 토큰 생성/해석 유틸리티, 외부 설정(CORS) 등을 주입받아 초기화합니다.
  *
  * <p><b>빈 관리:</b><br>
- * {@link Configuration}으로 등록되어 보안 관련 Bean(SecurityFilterChain, PasswordEncoder 등)을 생성 및 관리합니다.
+ * {@link Configuration}으로 등록되어 보안 관련 Bean(SecurityFilterChain 등)을 생성 및 관리합니다.
  *
  * <p><b>외부 모듈:</b><br>
- * Spring Security, BCryptPasswordEncoder 등을 사용하여 보안 기능을 구현합니다.
+ * Spring Security 등을 사용하여 보안 기능을 구현합니다.
  *
  * @author minhee
  * @since 2026-01-16
@@ -61,19 +63,22 @@ public class SecurityConfig {
     private final List<String> allowedOrigins;
     private final AuthenticationConfiguration authenticationConfiguration;
     private final TokenResolver tokenResolver;
+    private final TokenStore tokenStore;
 
     public SecurityConfig(
             CustomAuthenticationFilter customAuthenticationFilter,
             ObjectMapper objectMapper,
             JwtUtils jwtUtils,
             AuthenticationConfiguration authenticationConfiguration,
-            @Value("${custom.cors.allowed-origins}") List<String> allowedOrigins, TokenResolver tokenResolver) {
+            @Value("${custom.cors.allowed-origins}") List<String> allowedOrigins, TokenResolver tokenResolver,
+            TokenStore tokenStore) {
         this.customAuthenticationFilter = customAuthenticationFilter;
         this.objectMapper = objectMapper;
         this.jwtUtils = jwtUtils;
         this.authenticationConfiguration = authenticationConfiguration;
         this.allowedOrigins = allowedOrigins;
         this.tokenResolver = tokenResolver;
+        this.tokenStore = tokenStore;
     }
 
     private LoginFilter loginFilter() throws Exception {
@@ -81,7 +86,8 @@ public class SecurityConfig {
                 authenticationManager(authenticationConfiguration),
                 objectMapper,
                 jwtUtils,
-                tokenResolver
+                tokenResolver,
+                tokenStore
         );
     }
 
@@ -133,7 +139,6 @@ public class SecurityConfig {
                                       AuthenticationException authException) throws IOException, ServletException {
         response.setContentType("application/json;charset=UTF-8");
         AuthErrorCode errorCode = (AuthErrorCode) request.getAttribute("exception");
-
         if (errorCode == null) {
             errorCode = AuthErrorCode.LOGIN_REQUIRED;
         }

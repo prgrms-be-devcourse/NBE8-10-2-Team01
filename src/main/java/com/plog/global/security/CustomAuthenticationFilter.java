@@ -2,7 +2,6 @@ package com.plog.global.security;
 
 
 import com.plog.domain.member.dto.MemberInfoRes;
-import com.plog.domain.member.service.AuthService;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -23,16 +22,15 @@ import java.util.List;
 /**
  * 모든 HTTP 요청에 대해 JWT 토큰의 유효성을 검사하는 인증 필터입니다.
  * <p>
- * 요청 헤더(Authorization) 또는 쿠키(accessToken)에서 토큰을 추출하여 검증합니다.
- * 유효한 토큰일 경우 사용자의 인증 정보({@link SecurityUser})를 생성하고,
- * 이를 {@link SecurityContextHolder}에 저장하여 해당 요청 세션 동안 인증 상태를 유지합니다.
+ * 요청 헤더에서 Access Token을 추출하여 검증합니다. 만약 Access Token이 만료되었다면
+ * 쿠키의 Refresh Token과 {@link TokenStore}(Caffeine)를 대조하여 Access Token을 자동으로 재발급합니다.
  *
  * <p><b>상속 정보:</b><br>
  * {@link OncePerRequestFilter}를 상속받아 하나의 요청당 단 한 번만 실행됨을 보장합니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code CustomAuthenticationFilter(JwtUtils jwtUtils)}<br>
- * 토큰 파싱 및 검증 로직을 담당하는 JwtUtils를 주입받아 초기화합니다.
+ * {@code CustomAuthenticationFilter(JwtUtils, TokenResolver, CustomUserDetailsService, TokenStore)}<br>
+ * 인증 유지 및 토큰 재발급에 필요한 보안 컴포넌트들을 주입받습니다.
  *
  * <p><b>빈 관리:</b><br>
  * {@link Component} 어노테이션을 통해 스프링 빈으로 등록되며,
@@ -53,19 +51,19 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final TokenResolver tokenResolver;
     private final CustomUserDetailsService customUserDetailsService;
+    private final TokenStore tokenStore;
 
     /**
-     * 필터의 핵심 로직을 수행하며, 토큰 유무에 따라 인증 정보를 컨텍스트에 저장합니다.
+     * 필터의 핵심 로직을 수행하며, Access Token의 유효성을 검사하고 만료 시 재발급을 시도합니다.
      */
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = tokenResolver.resolveAccessToken(request);
+        String accessToken = tokenResolver.resolveAccessToken(request);
 
         try {
-            if (token != null) {
-                authenticate(token);
+            if (accessToken != null) {
+                authenticate(accessToken);
             }
         } catch (ExpiredJwtException e) {
             handleAccessTokenReissue(request, response);
@@ -74,6 +72,15 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * 검증된 {@link SecurityUser} 정보를 바탕으로 Spring Security 인증 객체를 생성하여 컨텍스트에 등록합니다.
+     * @param user 인증된 사용자 정보 객체
+     */
+    private void processAuthentication(SecurityUser user) {
+        Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     /**
@@ -97,25 +104,37 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 .authorities(List.of())
                 .build();
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(auth);
+        processAuthentication(user);
     }
 
     /**
-     * Access Token 만료 시 Refresh Token을 확인하여 새로운 Access Token을 발급합니다.
+     * Access Token 만료 시 자동 재발급을 수행합니다.
      * <p>
-     * 시큐리티 전용 {@link CustomUserDetailsService}를 통해 사용자 정보를 조회합니다.
-     * 발급된 새 토큰은 응답 헤더에 설정되며, 즉시 인증 처리가 수행됩니다.
+     * 쿠키의 Refresh Token과 {@link TokenStore}에 저장된 토큰이 일치하는지 확인합니다.
+     * 일치할 경우 새 Access Token을 생성하여 응답 헤더에 담고 인증을 승인합니다.
+     * 검증 실패(만료, 불일치 등) 시 관련 쿠키를 제거하고 로그인 유도 예외를 설정합니다.
      *
-     * @param request  HTTP 요청 객체 (쿠키 추출용)
-     * @param response HTTP 응답 객체 (헤더 설정용)
+     * @param request  RefreshToken 추출용
+     * @param response 새 토큰 전달 및 쿠키 삭제용
      */
     private void handleAccessTokenReissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = tokenResolver.resolveRefreshToken(request);
 
-        if (refreshToken != null) {
+        if (refreshToken == null) {
+            request.setAttribute("exception", AuthErrorCode.LOGIN_REQUIRED);
+            return;
+        }
+
+        try {
             Claims claims = jwtUtils.parseToken(refreshToken);
             String email = claims.getSubject();
+            String savedToken = tokenStore.get(email);
+
+            if (savedToken == null || !savedToken.equals(refreshToken)) {
+                tokenResolver.deleteRefreshTokenCookie(response);
+                request.setAttribute("exception", AuthErrorCode.LOGIN_REQUIRED);
+                return;
+            }
 
             SecurityUser user = (SecurityUser) customUserDetailsService.loadUserByUsername(email);
             MemberInfoRes memberInfo = MemberInfoRes.builder()
@@ -127,9 +146,12 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             String newAccess = jwtUtils.createAccessToken(memberInfo);
             tokenResolver.setHeader(response, newAccess);
 
-            authenticate(newAccess);
-        } else {
-            request.setAttribute("exception", AuthErrorCode.TOKEN_EXPIRED);
+            processAuthentication(user);
+        } catch (ExpiredJwtException e) {
+            tokenResolver.deleteRefreshTokenCookie(response);
+            request.setAttribute("exception", AuthErrorCode.LOGIN_REQUIRED);
+        } catch (Exception e) {
+            request.setAttribute("exception", AuthErrorCode.TOKEN_INVALID);
         }
     }
 }
