@@ -3,13 +3,17 @@ package com.plog.domain.image.service;
 import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.entity.Image;
 import com.plog.domain.image.repository.ImageRepository;
+import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.exception.errorCode.ImageErrorCode;
+import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.exception.exceptions.ImageException;
 import com.plog.global.minio.storage.ObjectStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.plog.domain.member.repository.MemberRepository;
+import com.plog.domain.member.entity.Member;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,10 +52,11 @@ public class ImageServiceImpl implements ImageService {
 
     private final ObjectStorage objectStorage;
     private final ImageRepository imageRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     @Transactional
-    public ImageUploadRes uploadImage(MultipartFile file) {
+    public ImageUploadRes uploadImage(MultipartFile file, Long memberId) {
         if (file.isEmpty() || file.getOriginalFilename() == null) {
             throw new ImageException(
                     ImageErrorCode.EMPTY_FILE,
@@ -59,6 +64,14 @@ public class ImageServiceImpl implements ImageService {
                     "이미지 파일이 비어있거나 잘못된 요청입니다."
             );
         }
+
+        Member uploader = memberRepository.findById(memberId)
+                .orElseThrow(() -> new AuthException(
+                        AuthErrorCode.USER_NOT_FOUND,
+                        "[ImageServiceImpl#uploadImage] member not found by id: " + memberId,
+                        "로그인 정보가 유효하지 않습니다. (사용자를 찾을 수 없음)"
+                ));
+
         String originalFileName = file.getOriginalFilename();
         String storedFileName = createStoredFileName(originalFileName);
 
@@ -76,11 +89,11 @@ public class ImageServiceImpl implements ImageService {
                 .originalName(originalFileName)
                 .storedName(storedFileName)
                 .accessUrl(accessUrl)
+                .uploader(uploader)
                 .build();
 
         imageRepository.save(image);
         return new ImageUploadRes(List.of(accessUrl), List.of());
-
     }
 
     private String createStoredFileName(String originalFilename) {
@@ -100,7 +113,7 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     @Transactional
-    public ImageUploadRes uploadImages(List<MultipartFile> files) {
+    public ImageUploadRes uploadImages(List<MultipartFile> files, Long memberId) {
         if (files == null || files.isEmpty()) {
             return new ImageUploadRes(List.of(), List.of());
         }
@@ -110,11 +123,10 @@ public class ImageServiceImpl implements ImageService {
 
         for (MultipartFile file : files) {
             try {
-                // uploadImage 결과에서 successUrls만 추출
-                ImageUploadRes singleResult = uploadImage(file);
+                ImageUploadRes singleResult = uploadImage(file, memberId);
                 successUrls.addAll(singleResult.successUrls());
             } catch (Exception e) {
-                // 실패한 파일명 기록
+
                 String filename = file.getOriginalFilename() != null
                         ? file.getOriginalFilename()
                         : "unknown-file";
@@ -124,14 +136,14 @@ public class ImageServiceImpl implements ImageService {
 
         return new ImageUploadRes(successUrls, failedFilenames);
     }
+
+
     @Override
     @Transactional
-    public void deleteImage(String imageUrl) {
+    public void deleteImage(String imageUrl, Long memberId) {
         if (imageUrl == null || imageUrl.isBlank()) {
             return;
         }
-
-        String storedName = objectStorage.parsePath(imageUrl);
 
 
         Image image = imageRepository.findByAccessUrl(imageUrl)
@@ -141,19 +153,29 @@ public class ImageServiceImpl implements ImageService {
                         "해당 이미지를 찾을 수 없습니다."
                 ));
 
-        objectStorage.delete(storedName);
 
-        imageRepository.delete(image);
+        if (!image.getUploader().getId().equals(memberId)) {
+            throw new AuthException(
+                    AuthErrorCode.USER_AUTH_FAIL,
+                    "[ImageServiceImpl#deleteImage] unauthorized deletion attempt. uploaderId=" + image.getUploader().getId() + ", requesterId=" + memberId,
+                    "이미지를 삭제할 권한이 없습니다."
+            );
+        }
+
+        String storedName = objectStorage.parsePath(imageUrl);
+        objectStorage.delete(storedName); // MinIO 삭제
+        imageRepository.delete(image);    // DB 삭제
     }
 
     @Override
     @Transactional
-    public void deleteImages(List<String> imageUrls) {
+    public void deleteImages(List<String> imageUrls, Long memberId) {
         if (imageUrls == null || imageUrls.isEmpty()) {
             return;
         }
         for (String url : imageUrls) {
-            deleteImage(url);
+
+            deleteImage(url, memberId);
         }
     }
 }

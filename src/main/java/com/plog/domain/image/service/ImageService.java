@@ -14,6 +14,8 @@ import java.util.List;
  * <p><b>주요 기능:</b><br>
  * - 단일 이미지 업로드 및 URL 반환 <br>
  * - 다중 이미지 일괄 업로드 및 URL 리스트 반환
+ * - 단일 이미지 삭제 <br>
+ * - 다중 이미지 일괄 삭제 <br>
  *
  * @author Jaewon Ryu
  * @see
@@ -25,24 +27,26 @@ public interface ImageService {
      * 단일 이미지를 업로드하고 URL을 반환합니다.
      * DB에 이미지 정보를 저장합니다.
      */
-    ImageUploadRes uploadImage(MultipartFile file);
+    ImageUploadRes uploadImage(MultipartFile file, Long memberId);
 
 
     /**
      * 다중 이미지를 업로드하고 URL 리스트를 반환합니다.
      */
-    ImageUploadRes uploadImages(List<MultipartFile> files);
+    ImageUploadRes uploadImages(List<MultipartFile> files, Long memberId);
 
 
     /**
      * 이미지 URL 하나를 받아 해당 이미지를 삭제합니다. (단일 삭제)
+     * Controller에 매핑되지 않은 내부용 메서드입니다.
      */
-    void deleteImage(String imageUrl);
+    void deleteImage(String imageUrl, Long memberId);
 
 
     /**
      * 이미지 URL 리스트를 받아 여러 이미지를 한 번에 삭제합니다. (일괄 삭제)
+     * Controller에 매핑되지 않은 내부용 메서드입니다.
      */
-    void deleteImages(List<String> imageUrls);
+    void deleteImages(List<String> imageUrls, Long memberId);
 
 }
