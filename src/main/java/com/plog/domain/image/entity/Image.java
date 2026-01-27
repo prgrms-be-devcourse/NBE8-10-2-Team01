@@ -1,6 +1,5 @@
 package com.plog.domain.image.entity;
 
-import com.plog.domain.post.entity.Post;
 import com.plog.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;

@@ -97,7 +97,7 @@ class LoginFilterTest {
         given(authentication.getPrincipal()).willReturn(securityUser);
 
         given(jwtUtils.createAccessToken(any(MemberInfoRes.class))).willReturn("mock-access-token");
-        given(jwtUtils.createRefreshToken(anyLong())).willReturn("mock-refresh-token");
+        given(jwtUtils.createRefreshToken(anyString())).willReturn("mock-refresh-token");
 
         // when
         loginFilter.successfulAuthentication(request, response, filterChain, authentication);

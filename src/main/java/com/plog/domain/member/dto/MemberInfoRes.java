@@ -16,6 +16,7 @@ public record MemberInfoRes(
         Long id,
         String email,
         String nickname,
+        String profileImageUrl,
         LocalDateTime createDate
 ) {
 
@@ -25,6 +26,7 @@ public record MemberInfoRes(
                 .email(member.getEmail())
                 .nickname(member.getNickname())
                 .createDate(member.getCreateDate())
+                .profileImageUrl(member.getProfileImage() != null ? member.getProfileImage().getAccessUrl() : null)
                 .build();
     }
 }

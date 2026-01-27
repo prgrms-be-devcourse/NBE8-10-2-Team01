@@ -41,7 +41,6 @@ import java.util.List;
 
 public interface CommentService {
 
-
     /**
      * 단일 게시글(Post)에 새로운 댓글 또는 대댓글을 작성한다.
      *
@@ -51,12 +50,13 @@ public interface CommentService {
      * </p>
      *
      * @param postId 게시글 식별자
+     * @param memberId 작성자 식별자
      * @param req 댓글 내용, 부모 댓글 식별자
      * @return 생성된 댓글의 식별자
      *
      * @throws IllegalArgumentException 게시글 또는 부모 댓글이 존재하지 않을 경우
      */
-    Long createComment(Long postId, CommentCreateReq req);
+    Long createComment(Long postId, Long memberId, CommentCreateReq req);
 
 
     /**
@@ -68,9 +68,10 @@ public interface CommentService {
      * </p>
      *
      * @param postId 게시글 식별자
+     * @param pageNumber 조회할 댓글 pageNumber
      * @return 댓글 목록 응답 DTO 슬라이스
      */
-    Slice<CommentInfoRes> getCommentsByPostId(Long postId, Pageable pageable);
+    Slice<CommentInfoRes> getCommentsByPostId(Long postId, int pageNumber);
 
 
     /**
@@ -82,9 +83,10 @@ public interface CommentService {
      * </p>
      *
      * @param commentId 부모 댓글 식별자
+     * @param pageNumber 조회할 대댓글 pageNumber
      * @return 대댓글 목록 응답 DTO 슬라이스
      */
-    Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, Pageable pageable);
+    Slice<ReplyInfoRes> getRepliesByCommentId(Long commentId, int pageNumber);
 
 
     /**
@@ -101,7 +103,7 @@ public interface CommentService {
      *
      * @throws IllegalArgumentException 댓글이 존재하지 않을 경우
      */
-    void updateComment(Long commentId, String content);
+    void updateComment(Long commentId, Long memberId, String content);
 
 
     /**
@@ -112,8 +114,9 @@ public interface CommentService {
      * </p>
      *
      * @param commentId 삭제할 댓글 식별자
+     * @param memberId 작성자 식별자
      *
      * @throws IllegalArgumentException 댓글이 존재하지 않을 경우
      */
-    void deleteComment(Long commentId);
+    void deleteComment(Long commentId, Long memberId);
 }

@@ -1,17 +1,29 @@
 package com.plog.domain.post.service;
 
+import com.plog.domain.comment.constant.CommentConstants;
 import com.plog.domain.comment.dto.CommentInfoRes;
+import com.plog.domain.comment.dto.ReplyInfoRes;
+import com.plog.domain.comment.entity.Comment;
+import com.plog.domain.comment.repository.CommentRepository;
 import com.plog.domain.comment.service.CommentService;
+import com.plog.domain.member.entity.Member;
+import com.plog.domain.member.repository.MemberRepository;
+import com.plog.domain.member.service.MemberService;
+import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.entity.PostStatus;
 import com.plog.domain.post.repository.PostRepository;
+import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.exception.errorCode.PostErrorCode;
+import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.exception.exceptions.PostException;
 import lombok.RequiredArgsConstructor;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.text.TextContentRenderer;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -42,18 +54,21 @@ public class PostServiceImpl implements PostService {
     private static final int MAX_SUMMARY_LENGTH = 150;
 
     private final PostRepository postRepository;
-    private final CommentService commentService;
+    private final CommentRepository commentRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     @Transactional
-    public Long createPost(String title, String content) {
-        String plainText = extractPlainText(content);
+    public Long createPost(Long memberId, PostCreateReq req) {
+        Member member = memberRepository.getReferenceById(memberId);
+        String plainText = extractPlainText(req.content());
         String summary = extractSummary(plainText);
 
         Post post = Post.builder()
-                .title(title)
-                .content(content)
+                .title(req.title())
+                .content(req.content())
                 .summary(summary)
+                .member(member)
                 .status(PostStatus.PUBLISHED)
                 .build();
 
@@ -62,16 +77,38 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostInfoRes getPostDetail(Long id, Pageable pageable) {
-        Post post = postRepository.findById(id)
+    public PostInfoRes getPostDetail(Long id, int pageNumber) {
+        Post post = postRepository.findByIdWithMember(id)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#getPostDetail] can't find post by id", "존재하지 않는 게시물입니다."));
 
         post.incrementViewCount();
 
-        Slice<CommentInfoRes> comments = commentService.getCommentsByPostId(id, pageable);
+        Pageable pageable = PageRequest.of(
+                pageNumber,
+                CommentConstants.COMMENT_PAGE_SIZE,
+                Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
+        );
 
-        return PostInfoRes.from(post, comments);
+        Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(id, pageable);
+
+        Slice<CommentInfoRes> commentResSlice = comments.map(this::convertToCommentInfoRes);
+
+        return PostInfoRes.from(post, commentResSlice);
+    }
+
+    private CommentInfoRes convertToCommentInfoRes(Comment comment) {
+
+        Pageable replyPageable = PageRequest.of(
+                0,
+                CommentConstants.REPLY_PAGE_SIZE,
+                Sort.by("createDate").ascending()
+        );
+
+        Slice<Comment> replySlice = commentRepository.findByParentId(comment.getId(), replyPageable);
+
+
+        return new CommentInfoRes(comment, replySlice.map(ReplyInfoRes::new));
     }
 
     @Override
@@ -83,26 +120,39 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void updatePost(Long id, String title, String content) {
-        Post post = postRepository.findById(id)
+    public void updatePost(Long memberId, Long postId, PostUpdateReq req) {
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#updatePost] can't find post", "존재하지 않는 게시물입니다."));
 
-        String plainText = extractPlainText(content);
+        if (!post.getMember().getId().equals(memberId)) {
+            throw new AuthException(AuthErrorCode.USER_AUTH_FAIL,
+                    "[PostServiceImpl#updatePost] user " + memberId + " is not the owner of post " + postId,
+                    "해당 게시물을 수정할 권한이 없습니다.");
+        }
+
+        String plainText = extractPlainText(req.content());
         String summary = extractSummary(plainText);
 
-        post.update(title, content, summary);
+        post.update(req.title(), req.content(), summary);
     }
 
     @Override
     @Transactional
-    public void deletePost(Long id) {
+    public void deletePost(Long memberId, Long postId) {
         // 1. 게시물 존재 여부 확인 및 조회
-        Post post = postRepository.findById(id)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#deletePost] can't find post by id", "존재하지 않는 게시물입니다."));
 
-        // 2. 게시물 삭제
+        // 2. 작성자 본인 확인 (권한 체크)
+        if (!post.getMember().getId().equals(memberId)) {
+            throw new AuthException(AuthErrorCode.USER_AUTH_FAIL,
+                    "[PostServiceImpl#deletePost] user " + memberId + " is not the owner of post " + postId,
+                    "해당 게시물을 삭제할 권한이 없습니다.");
+        }
+
+        // 3. 게시물 삭제
         postRepository.delete(post);
     }
 

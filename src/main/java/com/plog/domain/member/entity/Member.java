@@ -1,8 +1,8 @@
 package com.plog.domain.member.entity;
 
+import com.plog.domain.image.entity.Image;
 import com.plog.global.jpa.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.*;
 
 import static lombok.AccessLevel.PROTECTED;
@@ -22,6 +22,10 @@ public class Member extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String nickname;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_image_id")
+    private Image profileImage;
+
     /**
      * 엔티티의 update 메서드입니다.
      * <pre>
@@ -37,5 +41,9 @@ public class Member extends BaseEntity {
         this.nickname = nickname;
 
         return this;
+    }
+
+    public void updateProfileImage(Image profileImage) {
+        this.profileImage = profileImage;
     }
 }

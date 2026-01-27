@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 public enum CommentErrorCode implements ErrorCode{
 
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 댓글을 찾을 수 없습니다."),
+    INVALID_PARENT_COMMENT(HttpStatus.NOT_FOUND, "해당 게시글의 댓글이 아닙니다."),
     COMMENT_CREATE_FAILED(HttpStatus.NOT_FOUND, "댓글 작성에 실패하였습니다."),
     COMMENT_UPDATE_FAILED(HttpStatus.NOT_FOUND, "댓글 수정에 실패하였습니다."),
     COMMENT_DELETE_FAILED(HttpStatus.NOT_FOUND, "댓글 삭제에 실패하였습니다.");

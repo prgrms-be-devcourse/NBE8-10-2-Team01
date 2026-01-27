@@ -52,7 +52,7 @@ import java.util.List;
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final TokenResolver tokenResolver;
-    private final AuthService authService;
+    private final CustomUserDetailsService customUserDetailsService;
 
     /**
      * 필터의 핵심 로직을 수행하며, 토큰 유무에 따라 인증 정보를 컨텍스트에 저장합니다.
@@ -77,13 +77,16 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
+     * 전달받은 Access Token을 파싱하여 Spring Security 인증 객체를 생성하고 컨텍스트에 등록합니다.
+     * <p>
+     * 토큰의 Claims에서 사용자의 PK(id), 식별자(email), 닉네임을 추출하여 {@link SecurityUser}를 구성합니다.
      *
-     * @param token
+     * @param token 파싱할 JWT Access Token 문자열
      */
     private void authenticate(String token) {
         Claims claims = jwtUtils.parseToken(token);
-        Long id = Long.valueOf(claims.getSubject());
-        String email = claims.get("email", String.class);
+        Long id = claims.get("id", Long.class);
+        String email = claims.getSubject();
         String nickname = claims.get("nickname", String.class);
 
         SecurityUser user = SecurityUser.securityUserBuilder()
@@ -98,15 +101,29 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    // TODO: refresh token rotation 추후 도입
+    /**
+     * Access Token 만료 시 Refresh Token을 확인하여 새로운 Access Token을 발급합니다.
+     * <p>
+     * 시큐리티 전용 {@link CustomUserDetailsService}를 통해 사용자 정보를 조회합니다.
+     * 발급된 새 토큰은 응답 헤더에 설정되며, 즉시 인증 처리가 수행됩니다.
+     *
+     * @param request  HTTP 요청 객체 (쿠키 추출용)
+     * @param response HTTP 응답 객체 (헤더 설정용)
+     */
     private void handleAccessTokenReissue(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = tokenResolver.resolveRefreshToken(request);
 
         if (refreshToken != null) {
             Claims claims = jwtUtils.parseToken(refreshToken);
-            Long memberId = Long.valueOf(claims.getSubject());
+            String email = claims.getSubject();
 
-            MemberInfoRes memberInfo = authService.findMemberWithId(memberId);
+            SecurityUser user = (SecurityUser) customUserDetailsService.loadUserByUsername(email);
+            MemberInfoRes memberInfo = MemberInfoRes.builder()
+                    .id(user.getId())
+                    .email(user.getEmail())
+                    .nickname(user.getNickname())
+                    .build();
+
             String newAccess = jwtUtils.createAccessToken(memberInfo);
             tokenResolver.setHeader(response, newAccess);
 

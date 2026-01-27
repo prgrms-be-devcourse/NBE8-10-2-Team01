@@ -44,41 +44,60 @@ public class JwtUtils {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
+    /**
+     * 주입된 비밀키 문자열을 바탕으로 HMAC-SHA 알고리즘용 SecretKey 객체를 생성합니다.
+     *
+     * @return 알고리즘 규격에 맞는 {@link SecretKey}
+     */
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 사용자 정보를 포함한 인증용 Access Token을 생성합니다.
+     * <p>
+     * <b>포함 정보:</b> Subject(Email), ID Claim(Long PK), Nickname Claim.
+     *
+     * @param dto 토큰에 담을 사용자 정보 객체
+     * @return 생성된 JWT Access Token 문자열
+     */
     public String createAccessToken(MemberInfoRes dto) {
-        ClaimsBuilder claimsBuilder = Jwts.claims();
-        Claims claims = claimsBuilder
-                .add("email", dto.email())
-                .add("nickname", dto.nickname())
-                .build();
-
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + accessTokenExpiration);
-
         return Jwts.builder()
-                .subject(String.valueOf(dto.id()))
-                .claims(claims)
-                .issuedAt(issuedAt)
-                .expiration(expiration)
+                .subject(dto.email()) // Project username
+                .claim("id", dto.id())
+                .claim("nickname", dto.nickname())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }
 
-    public String createRefreshToken(Long id) {
-        Date issuedAt = new Date();
-        Date expiration = new Date(issuedAt.getTime() + refreshTokenExpiration);
-
+    /**
+     * 장기간 인증 유지를 위한 Refresh Token을 생성합니다.
+     * <p>
+     * 보안 정석에 따라 사용자의 식별자(Email == username)만 포함합니다.
+     *
+     * @param email 사용자를 식별할 이메일 주소
+     * @return 생성된 JWT Refresh Token 문자열
+     */
+    public String createRefreshToken(String email) {
         return Jwts.builder()
-                .subject(String.valueOf(id))
-                .issuedAt(issuedAt)
-                .expiration(expiration)
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(getSigningKey())
                 .compact();
     }
 
+    /**
+     * JWT 문자열의 서명을 검증하고 페이로드(Claims)를 추출합니다.
+     * <p>
+     * 토큰이 만료되었거나 구조가 잘못된 경우 관련 {@link io.jsonwebtoken.JwtException}을 던집니다.
+     *
+     * @param token 검증할 JWT 문자열
+     * @return 추출된 {@link Claims} 객체
+     * @throws io.jsonwebtoken.ExpiredJwtException 토큰 만료 시 발생
+     */
     public Claims parseToken(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
