@@ -39,6 +39,10 @@ public enum AccessURL {
             "/api/members/sign-in",
             "/api/members/logout",
             "/api/members/reissue"
+    )),
+    /** 인증 없이 GET 요청을 받아야 하는 공개 API 경로입니다. */
+    GET_PUBLIC(List.of(
+            "/api/posts/**"
     ));
 
     private final List<String> urls;

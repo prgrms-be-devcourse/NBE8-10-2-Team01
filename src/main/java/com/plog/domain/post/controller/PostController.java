@@ -7,6 +7,7 @@ import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.service.PostService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.response.Response;
+import com.plog.global.security.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -55,8 +57,11 @@ public class PostController {
      * @return 생성된 게시물의 ID를 포함한 공통 응답 객체 (201 Created)
      */
     @PostMapping
-    public ResponseEntity<Void> createPost(@Valid @RequestBody PostCreateReq request) {
-        Long postId = postService.createPost(request.title(), request.content());
+    public ResponseEntity<Void> createPost(
+            @AuthenticationPrincipal SecurityUser user,
+            @Valid @RequestBody PostCreateReq request
+    ) {
+        Long postId = postService.createPost(user.getId(), request);
         return ResponseEntity.created(URI.create("/api/posts/" + postId)).build();
     }
 
@@ -106,10 +111,11 @@ public class PostController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<Void> updatePost(
+            @AuthenticationPrincipal SecurityUser user,
             @PathVariable Long id,
             @Valid @RequestBody PostUpdateReq request) {
 
-        postService.updatePost(id, request.title(), request.content());
+        postService.updatePost(user.getId(), id, request);
 
         return ResponseEntity.noContent().build();
     }
@@ -125,9 +131,12 @@ public class PostController {
      * @return {@code 204 No Content} 응답
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+    public ResponseEntity<Void> deletePost(
+            @AuthenticationPrincipal SecurityUser user,
+            @PathVariable Long id
+    ) {
 
-        postService.deletePost(id);
+        postService.deletePost(user.getId(), id);
 
         return ResponseEntity.noContent().build();
     }

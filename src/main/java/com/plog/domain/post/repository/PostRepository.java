@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Post 엔티티에 대한 데이터 액세스 기능을 제공하는 인터페이스입니다.
@@ -32,6 +33,12 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+    /**
+     * 게시글 조회: 작성자(Member)를 한 번의 쿼리로 함께 가져옵니다.
+     */
+    @Query("select p from Post p join fetch p.member where p.id = :id")
+    Optional<Post> findByIdWithMember(@Param("id") Long id);
+
     /**
      * 전체 게시글 조회: 작성자(Member)를 한 번의 쿼리로 함께 가져옵니다.
      */

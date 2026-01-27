@@ -1,28 +1,39 @@
 package com.plog.domain.post.controller;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.plog.domain.comment.dto.CommentInfoRes;
+import com.plog.domain.member.service.AuthService;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.service.PostService;
-import com.plog.global.security.JwtUtils;
+import com.plog.global.security.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.plog.global.security.TokenResolver;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.mockito.Mockito.verify;
@@ -36,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(PostController.class)
 @ActiveProfiles("test")
+@Import({SecurityConfig.class, CustomAuthenticationFilter.class})
 class PostControllerTest {
 
     @Autowired
@@ -43,37 +55,62 @@ class PostControllerTest {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
+    // 이 부분은 Spring Security 자체에서 필요로 하는 Bean이기 때문에 따로 선언해주어야 합니다.
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper().registerModule(new JavaTimeModule());
+        }
+    }
     @MockitoBean
     private PostService postService;
 
     @MockitoBean
     private JwtUtils jwtUtils;
 
+    @MockitoBean
+    private TokenResolver tokenResolver;
+
+    @MockitoBean
+    private AuthService authService;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
+
+    @MockitoBean
+    private AuthenticationConfiguration authenticationConfiguration;
+
+    // 인증 유저를 모킹해서 생성합니다.
+    private SecurityUser getMockUser() {
+        return SecurityUser.securityUserBuilder()
+                .id(1L)
+                .email("test@plog.com")
+                .password("password")
+                .nickname("플로그")
+                .authorities(Collections.emptyList())
+                .build();
+    }
+
     @Test
-    @DisplayName("게시글 생성 시 DTO 객체를 JSON으로 변환하여 요청을 검증한다")
+    @DisplayName("게시글 생성 시 인증된 사용자가 요청하면 성공한다")
     void createPostSuccess() throws Exception {
         // [Given]
-        Long mockPostId = 1L;
-        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "테스트 본문");
+        Long mockMemberId = 1L;
+        Long createdPostId = 100L;
 
-        given(postService.createPost(anyString(), anyString())).willReturn(mockPostId);
+        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문");
 
-        // [When]
-        ResultActions resultActions = mvc
-                .perform(
-                        post("/api/posts")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
-                )
-                .andDo(print());
+        given(postService.createPost(eq(mockMemberId), any(PostCreateReq.class)))
+                .willReturn(createdPostId);
 
-        // [Then]
-        resultActions
+        mvc.perform(post("/api/posts")
+                        .with(user(getMockUser()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/posts/%d".formatted(mockPostId)))
-                .andExpect(jsonPath("$").doesNotExist());
-
-        verify(postService).createPost(eq(requestDto.title()), eq(requestDto.content()));
+                .andExpect(header().string("Location", "/api/posts/" + createdPostId));
     }
 
     @Test
@@ -85,7 +122,9 @@ class PostControllerTest {
                 .content("조회 본문")
                 .build();
 
-        given(postService.getPostDetail(anyLong())).willReturn(PostInfoRes.from(mockPost));
+        Slice<CommentInfoRes> mockComments = new SliceImpl<>(Collections.emptyList());
+
+        given(postService.getPostDetail(anyLong(), anyInt())).willReturn(PostInfoRes.from(mockPost));
 
         // [When]
         ResultActions resultActions = mvc
@@ -146,8 +185,8 @@ class PostControllerTest {
         // [When]
         ResultActions resultActions = mvc.perform(
                 put("/api/posts/{id}", postId)
+                        .with(user(getMockUser()))
                         .contentType(MediaType.APPLICATION_JSON)
-                        // 객체를 JSON 문자열로 자동 변환
                         .content(objectMapper.writeValueAsString(requestDto))
         ).andDo(print());
 
@@ -155,9 +194,9 @@ class PostControllerTest {
         resultActions.andExpect(status().isNoContent());
 
         verify(postService).updatePost(
+                eq(getMockUser().getId()),
                 eq(postId),
-                eq(requestDto.title()),
-                eq(requestDto.content())
+                eq(requestDto)
         );
     }
 
@@ -167,6 +206,7 @@ class PostControllerTest {
         // [When]
         ResultActions resultActions = mvc.perform(
                 delete("/api/posts/1")
+                        .with(user(getMockUser()))
         ).andDo(print());
 
         // [Then]
@@ -175,7 +215,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$").doesNotExist());
 
         // 서비스의 deletePost 메서드가 호출되었는지 검증합니다.
-        verify(postService).deletePost(1L);
+        verify(postService).deletePost(getMockUser().getId(), 1L);
     }
 
     @Test
@@ -188,7 +228,7 @@ class PostControllerTest {
 
         // PostInfoRes 데이터 준비
         PostInfoRes res = new PostInfoRes(
-                100L, "제목", "본문", "요약", 5, now, now
+                100L, "제목", "본문", "요약", 5, now, now, null
         );
 
         // SliceImpl을 사용하여 서비스 반환값 모킹 (데이터 1개, 다음 페이지 없음)
