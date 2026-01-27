@@ -1,6 +1,10 @@
 package com.plog.domain.post.service;
 
+import com.plog.domain.comment.constant.CommentConstants;
 import com.plog.domain.comment.dto.CommentInfoRes;
+import com.plog.domain.comment.dto.ReplyInfoRes;
+import com.plog.domain.comment.entity.Comment;
+import com.plog.domain.comment.repository.CommentRepository;
 import com.plog.domain.comment.service.CommentService;
 import com.plog.domain.post.dto.PostInfoRes;
 import com.plog.domain.post.entity.Post;
@@ -12,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.text.TextContentRenderer;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -42,7 +47,7 @@ public class PostServiceImpl implements PostService {
     private static final int MAX_SUMMARY_LENGTH = 150;
 
     private final PostRepository postRepository;
-    private final CommentService commentService;
+    private final CommentRepository commentRepository;
 
     @Override
     @Transactional
@@ -62,16 +67,38 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostInfoRes getPostDetail(Long id, Pageable pageable) {
+    public PostInfoRes getPostDetail(Long id, int pageNumber) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#getPostDetail] can't find post by id", "존재하지 않는 게시물입니다."));
 
         post.incrementViewCount();
 
-        Slice<CommentInfoRes> comments = commentService.getCommentsByPostId(id, pageable);
+        Pageable pageable = PageRequest.of(
+                pageNumber,
+                CommentConstants.COMMENT_PAGE_SIZE,
+                Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
+        );
 
-        return PostInfoRes.from(post, comments);
+        Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(id, pageable);
+
+        Slice<CommentInfoRes> commentResSlice = comments.map(this::convertToCommentInfoRes);
+
+        return PostInfoRes.from(post, commentResSlice);
+    }
+
+    private CommentInfoRes convertToCommentInfoRes(Comment comment) {
+
+        Pageable replyPageable = PageRequest.of(
+                0,
+                CommentConstants.REPLY_PAGE_SIZE,
+                Sort.by("createDate").ascending()
+        );
+
+        Slice<Comment> replySlice = commentRepository.findByParentId(comment.getId(), replyPageable);
+
+
+        return new CommentInfoRes(comment, replySlice.map(ReplyInfoRes::new));
     }
 
     @Override

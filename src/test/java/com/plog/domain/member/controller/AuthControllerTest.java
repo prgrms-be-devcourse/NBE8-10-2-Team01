@@ -4,8 +4,6 @@ package com.plog.domain.member.controller;
 import com.plog.domain.member.dto.AuthSignInReq;
 import com.plog.domain.member.dto.AuthSignUpReq;
 import com.plog.domain.member.service.AuthService;
-import com.plog.global.security.JwtUtils;
-import com.plog.global.security.TokenResolver;
 import com.plog.testUtil.WebMvcTestSupport;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -34,10 +32,6 @@ public class AuthControllerTest extends WebMvcTestSupport {
 
     @MockitoBean
     private AuthService authService;
-    @MockitoBean
-    private JwtUtils jwtUtils;
-    @MockitoBean
-    private TokenResolver tokenResolver;
 
     @Test
     @DisplayName("회원가입 성공 - 201, Location 헤더를 반환")
@@ -106,7 +100,7 @@ public class AuthControllerTest extends WebMvcTestSupport {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message").value("로그아웃 되었습니다."));
 
-        // Rq를 통해 쿠키가 삭제되었는지 검증
+        // 쿠키가 삭제되었는지 검증
         verify(tokenResolver).deleteRefreshTokenCookie(any(HttpServletResponse.class));
     }
 }

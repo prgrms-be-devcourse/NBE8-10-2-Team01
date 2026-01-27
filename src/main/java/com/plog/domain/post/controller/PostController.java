@@ -69,12 +69,9 @@ public class PostController {
     @GetMapping("/{id}")
     public ResponseEntity<Response<PostInfoRes>> getPost(
             @PathVariable Long id,
-            @PageableDefault(
-                    size = CommentConstants.COMMENT_PAGE_SIZE,
-                    sort = CommentConstants.DEFAULT_SORT_FIELD,
-                    direction = Sort.Direction.ASC) Pageable pageable
+            @RequestParam(name = "comment_offset", defaultValue = "0") int pageNumber
     ) {
-        PostInfoRes response = postService.getPostDetail(id, pageable);
+        PostInfoRes response = postService.getPostDetail(id, pageNumber);
         return ResponseEntity.ok(CommonResponse.success(response, "게시글 조회 성공"));
     }
 

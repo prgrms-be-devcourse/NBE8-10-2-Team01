@@ -43,10 +43,11 @@ public interface PostService {
      * 3. 엔티티 객체를 응답용 DTO({@code PostInfoRes})로 변환하여 반환합니다.
      *
      * @param id 게시물 고유 식별자
+     * @param pageNumber 조회할 댓글 pageNumber (최초 조회이므로 pageNumber==0)
      * @return 조회된 게시물 정보 DTO
      * @throws com.plog.global.exception.exceptions.PostException 게시물을 찾을 수 없을 때 발생
      */
-    PostInfoRes getPostDetail(Long id, Pageable pageable);
+    PostInfoRes getPostDetail(Long id, int pageNumber);
 
     /**
      * 게시물 목록을 페이징하여 조회합니다.
