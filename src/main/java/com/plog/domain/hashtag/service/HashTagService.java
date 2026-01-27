@@ -11,6 +11,12 @@ import java.util.List;
 @Transactional
 public interface HashTagService {
 
-    void createPostHashTag(Long postId, Long tagId, String newTagName);
-     List<HashTag> getAllHashTags();
+    /**
+     * 특정 게시글에 해시태그 리스트를 연결합니다.
+     *
+     * @param postId   연결할 게시글 ID
+     * @param tagNames 해시태그 이름 리스트
+     */
+    void createPostHashTag(Long postId, List<String> tagNames);
+
 }

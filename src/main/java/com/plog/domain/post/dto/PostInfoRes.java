@@ -1,10 +1,12 @@
 package com.plog.domain.post.dto;
 
 import com.plog.domain.comment.dto.CommentInfoRes;
+import com.plog.domain.hashtag.entity.PostHashTag;
 import com.plog.domain.post.entity.Post;
 import org.springframework.data.domain.Slice;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 게시물 상세 정보를 클라이언트에게 전달하기 위한 응답 데이터 레코드입니다.
@@ -37,7 +39,8 @@ public record PostInfoRes(
         int viewCount,
         LocalDateTime createDate,
         LocalDateTime modifyDate,
-        Slice<CommentInfoRes> comments
+        Slice<CommentInfoRes> comments,
+        List<String> hashtags
 ) {
     /**
      * Post 엔티티 객체를 PostResponse DTO로 변환하는 정적 팩토리 메서드입니다.
@@ -54,7 +57,11 @@ public record PostInfoRes(
                 post.getViewCount(),
                 post.getCreateDate(),
                 post.getModifyDate(),
-                null
+                null,
+                post.getPostHashTags().stream()
+                        .map(PostHashTag::getDisplayName)
+                        .toList()
+
         );
     }
 
@@ -67,7 +74,10 @@ public record PostInfoRes(
                 post.getViewCount(),
                 post.getCreateDate(),
                 post.getModifyDate(),
-                comments
+                comments,
+                post.getPostHashTags().stream()
+                        .map(PostHashTag::getDisplayName)
+                        .toList()
         );
     }
 }

@@ -1,9 +1,13 @@
 package com.plog.domain.post.entity;
 
+import com.plog.domain.hashtag.entity.PostHashTag;
 import com.plog.domain.member.entity.Member;
 import com.plog.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 블로그 게시물의 핵심 데이터를 담당하는 엔티티 클래스입니다.
@@ -53,6 +57,11 @@ public class Post extends BaseEntity{
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    @Builder.Default
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostHashTag> postHashTags = new ArrayList<>();
+
+
     public void incrementViewCount() {
         this.viewCount++;
     }
@@ -62,4 +71,5 @@ public class Post extends BaseEntity{
         this.content = content;
         this.summary = summary;
     }
+
 }

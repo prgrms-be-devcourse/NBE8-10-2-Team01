@@ -6,6 +6,7 @@ import com.plog.domain.hashtag.repository.HashTagRepository;
 import com.plog.domain.hashtag.repository.PostHashTagRepository;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
+import com.plog.global.exception.errorCode.HashTagErrorCode;
 import com.plog.global.exception.exceptions.HashTagException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,62 +24,37 @@ public class HashTagServiceImpl implements HashTagService {
 
     @Override
     @Transactional
-    public void createPostHashTag(Long postId, Long tagId, String newTagName) {
+    public void createPostHashTag(Long postId, List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) return;
 
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+                .orElseThrow(() -> new HashTagException(HashTagErrorCode.HASHTAG_POST_NOT_FOUND));
 
-        HashTag hashTag = null;
-        String displayName = "";
+        for (String rawName : tagNames) {
 
-
-        if (tagId != null) {
-            hashTag = hashTagRepository.findById(tagId)
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 ID입니다."));
-            displayName = hashTag.getName();
-        }
-
-        else if (newTagName != null && !newTagName.trim().isEmpty()) {
-            String rawTag = newTagName.trim();
-            String normalizedName = normalizeTag(rawTag);
+            String normalizedName = normalizeTag(rawName);
 
 
-            hashTag = hashTagRepository.findByName(normalizedName)
+            HashTag hashTag = hashTagRepository.findByName(normalizedName)
                     .orElseGet(() -> hashTagRepository.save(new HashTag(normalizedName)));
 
-            displayName = rawTag;
-        }
+            // 3. 중복 연결 방지 및 저장
+            if (!postHashTagRepository.existsByPostIdAndHashTagId(post.getId(), hashTag.getId())) {
+                PostHashTag postHashTag = PostHashTag.builder()
+                        .post(post)
+                        .hashTag(hashTag)
+                        .displayName(rawName)
+                        .build();
 
-        if (hashTag == null) return;
+                postHashTagRepository.save(postHashTag);
 
-        // 4. [저장] 중복 체크 후 저장
-        if (!postHashTagRepository.existsByPostIdAndHashTagId(post.getId(), hashTag.getId())) {
-
-            PostHashTag postHashTag = PostHashTag.builder()
-                    .post(post)
-                    .hashTag(hashTag)
-                    .displayName(displayName)
-                    .build();
-
-            // DB 저장
-            postHashTagRepository.save(postHashTag);
-
-            // 양방향 연관관계 설정
-            //post.addPostHashTag(postHashTag);
+            }
         }
     }
 
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<HashTag> getAllHashTags() {
-        return hashTagRepository.findAll();
-    }
 
-    private String normalizeTag(String keyword) {
-        return keyword.trim()
-                .replaceAll("\\s+", " ")
-                .replace(" ", "_")
-                .toLowerCase();
+    private String normalizeTag(String name) {
+        return name.trim().toLowerCase().replace(" ", "_");
     }
 }
