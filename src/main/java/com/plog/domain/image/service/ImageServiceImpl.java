@@ -65,12 +65,7 @@ public class ImageServiceImpl implements ImageService {
             );
         }
 
-        Member uploader = memberRepository.findById(memberId)
-                .orElseThrow(() -> new AuthException(
-                        AuthErrorCode.USER_NOT_FOUND,
-                        "[ImageServiceImpl#uploadImage] member not found by id: " + memberId,
-                        "로그인 정보가 유효하지 않습니다. (사용자를 찾을 수 없음)"
-                ));
+        Member uploader = memberRepository.getReferenceById(memberId);
 
         String originalFileName = file.getOriginalFilename();
         String storedFileName = createStoredFileName(originalFileName);
