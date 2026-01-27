@@ -90,7 +90,7 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, AccessURL.GET_PUBLIC.getUrls().toArray(String[]::new)).permitAll()
                         .requestMatchers(AccessURL.PUBLIC.getUrls().toArray(String[]::new)).permitAll()
                         .anyRequest().authenticated()
                 )

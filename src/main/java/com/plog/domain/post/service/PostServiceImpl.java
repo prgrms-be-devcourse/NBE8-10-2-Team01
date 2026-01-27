@@ -55,7 +55,6 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-    private final CommentService commentService;
     private final MemberRepository memberRepository;
 
     @Override
@@ -121,14 +120,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void updatePost(Long memberId, Long id, PostUpdateReq req) {
-        Post post = postRepository.findById(id)
+    public void updatePost(Long memberId, Long postId, PostUpdateReq req) {
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#updatePost] can't find post", "존재하지 않는 게시물입니다."));
 
         if (!post.getMember().getId().equals(memberId)) {
             throw new AuthException(AuthErrorCode.USER_AUTH_FAIL,
-                    "[PostServiceImpl#updatePost] user " + memberId + " is not the owner of post " + id,
+                    "[PostServiceImpl#updatePost] user " + memberId + " is not the owner of post " + postId,
                     "해당 게시물을 수정할 권한이 없습니다.");
         }
 
@@ -140,16 +139,16 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public void deletePost(Long memberId, Long id) {
+    public void deletePost(Long memberId, Long postId) {
         // 1. 게시물 존재 여부 확인 및 조회
-        Post post = postRepository.findById(id)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostException(PostErrorCode.POST_NOT_FOUND,
                         "[PostServiceImpl#deletePost] can't find post by id", "존재하지 않는 게시물입니다."));
 
         // 2. 작성자 본인 확인 (권한 체크)
         if (!post.getMember().getId().equals(memberId)) {
             throw new AuthException(AuthErrorCode.USER_AUTH_FAIL,
-                    "[PostServiceImpl#deletePost] user " + memberId + " is not the owner of post " + id,
+                    "[PostServiceImpl#deletePost] user " + memberId + " is not the owner of post " + postId,
                     "해당 게시물을 삭제할 권한이 없습니다.");
         }
 
