@@ -4,6 +4,7 @@ import com.plog.domain.member.dto.AuthSignInReq;
 import com.plog.domain.member.dto.AuthInfoRes;
 import com.plog.domain.member.dto.AuthSignUpReq;
 import com.plog.domain.member.service.AuthService;
+import com.plog.domain.post.service.PostTemplateService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.response.Response;
 import com.plog.global.security.TokenResolver;
@@ -47,6 +48,7 @@ import java.net.URI;
 public class AuthController {
     private final AuthService authService;
     private final TokenResolver tokenResolver;
+    private final PostTemplateService postTemplateService;
 
     /**
      * 새로운 회원을 등록(회원가입)합니다.
@@ -61,6 +63,7 @@ public class AuthController {
             @Valid @RequestBody AuthSignUpReq req
     ) {
         Long memberId = authService.signUp(req);
+        postTemplateService.initTemplateSeedOfUser(memberId);
 
         return ResponseEntity.created(URI.create(("/api/members/"+memberId))).build();
     }
