@@ -49,7 +49,7 @@ public class PostServiceTest {
     void createPostSuccess() {
 
         Long memberId = 1L;
-        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**", null);
+        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**", null,null);
 
         Member mockMember = Member.builder().build();
 
@@ -77,7 +77,7 @@ public class PostServiceTest {
 
         Long memberId = 1L;
         String longContent = "가".repeat(200);
-        PostCreateReq requestDto = new PostCreateReq("제목", longContent, null);
+        PostCreateReq requestDto = new PostCreateReq("제목", longContent, null, null);
 
         Member mockMember = Member.builder().build();
 

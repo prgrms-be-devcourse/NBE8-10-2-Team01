@@ -100,7 +100,7 @@ class PostControllerTest {
         Long mockMemberId = 1L;
         Long createdPostId = 100L;
 
-        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문", null);
+        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문", null, null);
 
         given(postService.createPost(eq(mockMemberId), any(PostCreateReq.class)))
                 .willReturn(createdPostId);
@@ -232,7 +232,7 @@ class PostControllerTest {
 
         // PostInfoRes 데이터 준비
         PostInfoRes res = new PostInfoRes(
-                100L, "제목", "본문", 5, now, now, null, "nickname", "imageURL"
+                100L, "제목", "본문", 5, now, now, null, null, "nickname", "imageURL"
         );
 
         // SliceImpl을 사용하여 서비스 반환값 모킹 (데이터 1개, 다음 페이지 없음)
