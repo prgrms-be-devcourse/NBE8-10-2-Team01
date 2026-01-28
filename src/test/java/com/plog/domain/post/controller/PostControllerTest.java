@@ -32,7 +32,6 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -228,7 +227,7 @@ class PostControllerTest {
 
         // PostInfoRes 데이터 준비
         PostInfoRes res = new PostInfoRes(
-                100L, "제목", "본문", "요약", 5, now, now, null
+                100L, "제목", "본문", 5, now, now, null
         );
 
         // SliceImpl을 사용하여 서비스 반환값 모킹 (데이터 1개, 다음 페이지 없음)
@@ -255,7 +254,6 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.data.content[0].id").value(100))
                 .andExpect(jsonPath("$.data.content[0].title").value("제목"))
                 .andExpect(jsonPath("$.data.content[0].content").value("본문"))
-                .andExpect(jsonPath("$.data.content[0].summary").value("요약"))
                 .andExpect(jsonPath("$.data.content[0].viewCount").value(5))
                 .andExpect(jsonPath("$.data.content[0].createDate").exists())
                 .andExpect(jsonPath("$.data.content[0].modifyDate").exists())

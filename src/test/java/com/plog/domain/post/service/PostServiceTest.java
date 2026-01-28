@@ -294,7 +294,6 @@ public class PostServiceTest {
         PostInfoRes dto = result.getContent().get(0);
         assertThat(dto.title()).isEqualTo("테스트 제목");
         assertThat(dto.content()).isEqualTo("테스트 본문");
-        assertThat(dto.summary()).isEqualTo("테스트 요약");
         assertThat(dto.viewCount()).isEqualTo(10);
 
         // 3. 리포지토리 호출 확인 (새로운 메서드와 파라미터 기준)
