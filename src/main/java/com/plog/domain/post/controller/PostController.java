@@ -51,6 +51,7 @@ public class PostController {
 
     private final PostService postService;
     private final HashTagService hashTagService;
+
     /**
      * 새로운 게시물을 생성합니다.
      *
@@ -58,17 +59,12 @@ public class PostController {
      * @return 생성된 게시물의 ID를 포함한 공통 응답 객체 (201 Created)
      */
     @PostMapping
-
-    public ResponseEntity<Void> createPost(@Valid @RequestBody PostCreateReq request) {
-        Long postId = postService.createPost(request.title(), request.content());
-
-        hashTagService.createPostHashTag(postId, request.hashtags());
-
     public ResponseEntity<Void> createPost(
             @AuthenticationPrincipal SecurityUser user,
             @Valid @RequestBody PostCreateReq request
     ) {
         Long postId = postService.createPost(user.getId(), request);
+        hashTagService.createPostHashTag(postId, request.hashtags());
 
         return ResponseEntity.created(URI.create("/api/posts/" + postId)).build();
     }
@@ -164,7 +160,7 @@ public class PostController {
     public ResponseEntity<Response<Slice<PostInfoRes>>> getPostsByMember(
             @PathVariable Long memberId,
             @PageableDefault(size = 10, sort = "createDate", direction = Sort.Direction.DESC) Pageable pageable
-            ) {
+    ) {
         Slice<PostInfoRes> posts = postService.getPostsByMember(memberId, pageable);
 
         return ResponseEntity.ok(CommonResponse.success(posts, "사용자 게시글 목록 조회 성공"));

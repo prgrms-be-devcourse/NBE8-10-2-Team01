@@ -6,8 +6,6 @@ import com.plog.domain.hashtag.repository.HashTagRepository;
 import com.plog.domain.hashtag.repository.PostHashTagRepository;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
-import com.plog.global.exception.errorCode.HashTagErrorCode;
-import com.plog.global.exception.exceptions.HashTagException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +25,8 @@ public class HashTagServiceImpl implements HashTagService {
     public void createPostHashTag(Long postId, List<String> tagNames) {
         if (tagNames == null || tagNames.isEmpty()) return;
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new HashTagException(HashTagErrorCode.HASHTAG_POST_NOT_FOUND));
+        Post post = postRepository.getReferenceById(postId);
+
 
         for (String rawName : tagNames) {
 
