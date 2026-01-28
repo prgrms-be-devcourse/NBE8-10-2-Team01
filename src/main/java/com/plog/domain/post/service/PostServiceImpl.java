@@ -66,6 +66,7 @@ public class PostServiceImpl implements PostService {
                 .summary(summary)
                 .member(member)
                 .status(PostStatus.PUBLISHED)
+                .thumbnail(req.thumbnail())
                 .build();
 
         return postRepository.save(post).getId();
@@ -130,7 +131,7 @@ public class PostServiceImpl implements PostService {
         String plainText = extractPlainText(req.content());
         String summary = extractSummary(plainText);
 
-        post.update(req.title(), req.content(), summary);
+        post.update(req.title(), req.content(), summary, req.thumbnail());
     }
 
     @Override

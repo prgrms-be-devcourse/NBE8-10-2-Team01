@@ -99,7 +99,7 @@ class PostControllerTest {
         Long mockMemberId = 1L;
         Long createdPostId = 100L;
 
-        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문");
+        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문", null);
 
         given(postService.createPost(eq(mockMemberId), any(PostCreateReq.class)))
                 .willReturn(createdPostId);
@@ -180,7 +180,7 @@ class PostControllerTest {
     void updatePostSuccess() throws Exception {
         // [Given]
         Long postId = 1L;
-        PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문");
+        PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문", null);
 
         // [When]
         ResultActions resultActions = mvc.perform(

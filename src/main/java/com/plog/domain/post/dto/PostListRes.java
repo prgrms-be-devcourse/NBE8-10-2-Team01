@@ -33,7 +33,8 @@ public record PostListRes(
         String summary,
         int viewCount,
         LocalDateTime createDate,
-        LocalDateTime modifyDate
+        LocalDateTime modifyDate,
+        String thumbnail
 ) {
     /**
      * Post 엔티티 객체를 PostResponse DTO로 변환하는 정적 팩토리 메서드입니다.
@@ -48,7 +49,8 @@ public record PostListRes(
                 post.getSummary(),
                 post.getViewCount(),
                 post.getCreateDate(),
-                post.getModifyDate()
+                post.getModifyDate(),
+                post.getThumbnail()
         );
     }
 }

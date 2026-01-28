@@ -53,13 +53,16 @@ public class Post extends BaseEntity{
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    private String thumbnail;
+
     public void incrementViewCount() {
         this.viewCount++;
     }
 
-    public void update(String title, String content, String summary) {
+    public void update(String title, String content, String summary, String thumbnail) {
         this.title = title;
         this.content = content;
         this.summary = summary;
+        this.thumbnail = thumbnail;
     }
 }

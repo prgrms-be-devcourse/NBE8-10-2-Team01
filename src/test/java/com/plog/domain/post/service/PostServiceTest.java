@@ -49,7 +49,7 @@ public class PostServiceTest {
     void createPostSuccess() {
 
         Long memberId = 1L;
-        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**");
+        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**", null);
 
         Member mockMember = Member.builder().build();
 
@@ -77,7 +77,7 @@ public class PostServiceTest {
 
         Long memberId = 1L;
         String longContent = "가".repeat(200);
-        PostCreateReq requestDto = new PostCreateReq("제목", longContent);
+        PostCreateReq requestDto = new PostCreateReq("제목", longContent, null);
 
         Member mockMember = Member.builder().build();
 
@@ -146,7 +146,7 @@ public class PostServiceTest {
         String newContent = "수정된 본문 내용입니다. 이 내용은 150자 미만이므로 그대로 요약이 됩니다.";
 
         // [When]
-        postService.updatePost(memberId, postId, new PostUpdateReq(newTitle, newContent));
+        postService.updatePost(memberId, postId, new PostUpdateReq(newTitle, newContent, null));
 
         // [Then]
         // 더티 체킹에 의해 변경될 엔티티의 상태를 검증합니다.
@@ -163,7 +163,7 @@ public class PostServiceTest {
         given(postRepository.findById(anyLong())).willReturn(Optional.empty());
 
         // [When & Then]
-        assertThatThrownBy(() -> postService.updatePost(memberId, 99L, new PostUpdateReq("제목", "내용")))
+        assertThatThrownBy(() -> postService.updatePost(memberId, 99L, new PostUpdateReq("제목", "내용", null)))
                 .isInstanceOf(PostException.class)
                 .hasMessageContaining("존재하지 않는 게시물입니다.");
     }
@@ -185,7 +185,7 @@ public class PostServiceTest {
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
         // [When & Then]
-        assertThatThrownBy(() -> postService.updatePost(otherMemberId, postId, new PostUpdateReq("제목", "내용")))
+        assertThatThrownBy(() -> postService.updatePost(otherMemberId, postId, new PostUpdateReq("제목", "내용", null)))
                 .isInstanceOf(AuthException.class)
                 .hasMessageContaining("수정할 권한이 없습니다.");
     }
