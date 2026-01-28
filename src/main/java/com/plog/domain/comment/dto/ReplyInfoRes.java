@@ -30,6 +30,7 @@ public record ReplyInfoRes(
         String nickname,
         String email,
         String profileUrl,
+        long likeCount,
         LocalDateTime createDate,
         LocalDateTime modifyDate
 ) {
@@ -44,6 +45,7 @@ public record ReplyInfoRes(
                 (comment.getAuthor().getProfileImage() != null)
                         ? comment.getAuthor().getProfileImage().getAccessUrl()
                         : null,
+                comment.getLikeCount(),
                 comment.getCreateDate(),
                 comment.getModifyDate()
         );

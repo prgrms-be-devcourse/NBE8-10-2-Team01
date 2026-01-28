@@ -4,6 +4,7 @@ import com.plog.domain.member.entity.Member;
 import com.plog.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 /**
  * 블로그 게시물의 핵심 데이터를 담당하는 엔티티 클래스입니다.
@@ -56,6 +57,9 @@ public class Post extends BaseEntity{
     public void incrementViewCount() {
         this.viewCount++;
     }
+
+    @Formula("(SELECT count(*) FROM comment c WHERE c.post_id = id AND c.deleted = false)")
+    private long commentCount;
 
     public void update(String title, String content, String summary) {
         this.title = title;
