@@ -226,7 +226,8 @@ public class PostServiceTest {
         verify(postRepository).findById(postId);
         // 2. 실제 리포지토리의 delete 메서드가 해당 엔티티로 호출되었는지 확인
         verify(postRepository).delete(post);
-        verify(commentRepository).deleteAllByPostId(postId);
+        verify(commentRepository).deleteParentsByPostId(postId);
+        verify(commentRepository).deleteRepliesByPostId(postId);
     }
 
     @Test
