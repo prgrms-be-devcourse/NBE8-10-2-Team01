@@ -14,6 +14,7 @@ import lombok.Builder;
  */
 @Builder
 public record AuthLoginResult(
+        Long id,
         String nickname,
         String accessToken,
         String refreshToken

@@ -8,7 +8,9 @@ import com.plog.domain.member.repository.MemberRepository;
 import com.plog.global.exception.errorCode.AuthErrorCode;
 import com.plog.global.exception.exceptions.AuthException;
 import com.plog.global.security.JwtUtils;
+import com.plog.global.security.TokenStore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 2026-01-15
  */
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -38,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final TokenStore tokenStore;
 
     @Override
     @Transactional
@@ -61,6 +65,18 @@ public class AuthServiceImpl implements AuthService {
                 .nickname(req.nickname())
                 .build();
         return memberRepository.save(member).getId();
+    }
+
+    @Override
+    public void logout(String refreshToken) {
+        if (refreshToken != null) {
+            try {
+                String email = jwtUtils.parseToken(refreshToken).getSubject();
+                tokenStore.delete(email);
+            } catch (Exception e) {
+                log.info("이미 만료되었거나 유효하지 않은 토큰으로 로그아웃 시도");
+            }
+        }
     }
 
     /**

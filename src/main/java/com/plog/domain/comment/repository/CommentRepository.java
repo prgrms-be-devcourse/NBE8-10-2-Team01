@@ -1,13 +1,11 @@
 package com.plog.domain.comment.repository;
 
 import com.plog.domain.comment.entity.Comment;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * <p>
@@ -29,12 +27,22 @@ import java.util.List;
  */
 public interface CommentRepository extends JpaRepository<Comment, Long>{
 
-    @EntityGraph(attributePaths = {"author"}) // N+1 방지
-    Slice<Comment> findByPostIdAndParentIsNull(Long postId, Pageable pageable);
 
-    // 대댓글 조회용 (추가)
-    @EntityGraph(attributePaths = {"author"})
-    Slice<Comment> findByParentId(Long parentId, Pageable pageable);
+    @Query("select c from Comment c " +
+            "join fetch c.author m " +
+            "left join fetch m.profileImage i " +
+            "where c.post.id = :postId and c.parent is null " +
+            "order by c.createDate desc")
+    Slice<Comment> findCommentsWithMemberAndImageByPostId(@Param("postId") Long postId, Pageable pageable);
+
+
+    @Query("select r from Comment r " +
+            "join fetch r.author m " +
+            "left join fetch m.profileImage i " +
+            "where r.parent.id = :parentId " +
+            "order by r.createDate asc")
+    Slice<Comment> findRepliesWithMemberAndImageByParentId(@Param("parentId") Long parentId, Pageable pageable);
+
 
     boolean existsByParent(Comment parent);
 }

@@ -14,7 +14,7 @@ import java.util.List;
  * {@link java.lang.Record} 클래스를 암시적으로 상속받으며, 불변(Immutable) 객체입니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code PostCreateRequest(String title, String content)} <br>
+ * {@code PostCreateReq(String title, String content)} <br>
  * 모든 필드를 초기화하는 컴팩트 생성자가 자동으로 정의됩니다. <br>
  *
  * <p><b>빈 관리:</b><br>
@@ -36,5 +36,6 @@ public record PostCreateReq(
 
         List<String> hashtags
 
+        String thumbnail
 ) {
 }

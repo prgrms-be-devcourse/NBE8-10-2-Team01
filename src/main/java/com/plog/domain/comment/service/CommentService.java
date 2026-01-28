@@ -3,11 +3,8 @@ package com.plog.domain.comment.service;
 import com.plog.domain.comment.dto.CommentCreateReq;
 import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.dto.ReplyInfoRes;
-import com.plog.domain.comment.entity.Comment;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
-import java.util.List;
 
 /**
  * 게시글 댓글(Comment) 도메인의 비즈니스 로직을 정의하는 서비스 인터페이스.

@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- *  {@link AuthController} 에 대한 슬라이스 테스트 입니다.
+ * {@link AuthController} 에 대한 슬라이스 테스트 입니다.
  *
  * @author minhee
  * @since 2026-01-21
@@ -29,9 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AuthController.class)
 public class AuthControllerTest extends WebMvcTestSupport {
-
-    @MockitoBean
-    private AuthService authService;
 
     @Test
     @DisplayName("회원가입 성공 - 201, Location 헤더를 반환")
@@ -91,6 +88,10 @@ public class AuthControllerTest extends WebMvcTestSupport {
     @Test
     @DisplayName("로그아웃 성공 - 200, 쿠키 삭제 확인")
     void logout_success() throws Exception {
+        // given
+        String refreshToken = "refresh-token";
+        given(tokenResolver.resolveRefreshToken(any())).willReturn(refreshToken);
+
         // when
         ResultActions result = mockMvc.perform(get("/api/members/logout")
                 .contentType(MediaType.APPLICATION_JSON));
@@ -101,6 +102,7 @@ public class AuthControllerTest extends WebMvcTestSupport {
                 .andExpect(jsonPath("$.message").value("로그아웃 되었습니다."));
 
         // 쿠키가 삭제되었는지 검증
+        verify(authService).logout(eq(refreshToken));
         verify(tokenResolver).deleteRefreshTokenCookie(any(HttpServletResponse.class));
     }
 }

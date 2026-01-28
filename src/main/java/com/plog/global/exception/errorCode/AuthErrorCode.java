@@ -21,22 +21,22 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum AuthErrorCode implements ErrorCode {
     // 조회 및 기본 관리
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "can't get user"),
-    USER_CREATE_FAIL(HttpStatus.BAD_REQUEST, "failed to createWithCategory user"),
-    USER_UPDATE_FAIL(HttpStatus.BAD_REQUEST, "failed to update user"),
-    USER_DELETE_FAIL(HttpStatus.BAD_REQUEST, "failed to delete user"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 사용자를 찾을 수 없습니다."),
+    USER_CREATE_FAIL(HttpStatus.BAD_REQUEST, "사용자 생성에 실패하였습니다."),
+    USER_UPDATE_FAIL(HttpStatus.BAD_REQUEST, "사용자 정보 수정에 실패하였습니다."),
+    USER_DELETE_FAIL(HttpStatus.BAD_REQUEST, "사용자 삭제에 실패하였습니다."),
 
     // 회원가입 및 로그인
-    SIGNUP_FAIL(HttpStatus.BAD_REQUEST, "failed to sign up"),
-    LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "failed to login"),
-    USER_ALREADY_EXIST(HttpStatus.CONFLICT, "user already exists."),
-    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "invalid email or password"),
+    SIGNUP_FAIL(HttpStatus.BAD_REQUEST, "회원가입에 실패하였습니다."),
+    LOGIN_FAIL(HttpStatus.UNAUTHORIZED, "로그인에 실패하였습니다."),
+    USER_ALREADY_EXIST(HttpStatus.CONFLICT, "이미 존재하는 사용자입니다."),
+    INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호가 일치하지 않습니다."),
 
     // 인증 및 권한
-    USER_AUTH_FAIL(HttpStatus.FORBIDDEN, "user authorization failed"),
-    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "token has expired"),
-    TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "invalid token"),
-    LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "login required");
+    USER_AUTH_FAIL(HttpStatus.FORBIDDEN, "사용자 권한 인증에 실패하였습니다."),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "토큰이 만료되었습니다."),
+    TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+    LOGIN_REQUIRED(HttpStatus.UNAUTHORIZED, "로그인이 필요한 서비스입니다.");
 
     private final HttpStatus status;
     private final String message;

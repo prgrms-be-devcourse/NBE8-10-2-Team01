@@ -2,11 +2,11 @@ package com.plog.domain.post.service;
 
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostListRes;
 import com.plog.domain.post.dto.PostUpdateReq;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
-import java.util.List;
 
 /**
  * 게시물 관련 비즈니스 로직을 정의하는 인터페이스입니다.
@@ -60,7 +60,7 @@ public interface PostService {
      *
      * @return 최신순으로 정렬된 게시물 정보 DTO 리스트
      */
-    Slice<PostInfoRes> getPosts(Pageable pageable);
+    Slice<PostListRes> getPosts(Pageable pageable);
 
     /**
      * 기존 게시물을 수정합니다.

@@ -37,8 +37,7 @@ public enum AccessURL {
     PUBLIC(List.of(
             "/api/members/sign-up",
             "/api/members/sign-in",
-            "/api/members/logout",
-            "/api/members/reissue"
+            "/api/members/logout"
     )),
     /** 인증 없이 GET 요청을 받아야 하는 공개 API 경로입니다. */
     GET_PUBLIC(List.of(

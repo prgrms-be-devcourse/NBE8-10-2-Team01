@@ -53,13 +53,15 @@ class LoginFilterTest {
     @Mock private AuthenticationManager authenticationManager;
     @Mock
     private JwtUtils jwtUtils;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Spy
     private TokenResolver tokenResolver = new TokenResolver(3600000, "localhost", false);
+    @Mock
+    private TokenStore tokenStore;
 
     @BeforeEach
     void setUp() {
-        loginFilter = new LoginFilter(authenticationManager, objectMapper, jwtUtils, tokenResolver);
+        loginFilter = new LoginFilter(authenticationManager, objectMapper, jwtUtils, tokenResolver, tokenStore);
     }
 
     @Test
@@ -83,6 +85,11 @@ class LoginFilterTest {
     @Test
     @DisplayName("인증 성공 - 토큰 생성 및 헤더/쿠키 설정 확인")
     void successfulAuthentication_test() throws Exception {
+        String name = "plogger";
+        String email = "test@plog.com";
+        String accessToken = "mock-access-token";
+        String refreshToken = "mock-refresh-token";
+
         // given
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -90,28 +97,30 @@ class LoginFilterTest {
 
         SecurityUser securityUser = mock(SecurityUser.class);
         given(securityUser.getId()).willReturn(1L);
-        given(securityUser.getEmail()).willReturn("test@plog.com");
-        given(securityUser.getNickname()).willReturn("plogger");
+        given(securityUser.getEmail()).willReturn(email);
+        given(securityUser.getNickname()).willReturn(name);
 
         Authentication authentication = mock(Authentication.class);
         given(authentication.getPrincipal()).willReturn(securityUser);
 
-        given(jwtUtils.createAccessToken(any(MemberInfoRes.class))).willReturn("mock-access-token");
-        given(jwtUtils.createRefreshToken(anyString())).willReturn("mock-refresh-token");
+        given(jwtUtils.createAccessToken(any(MemberInfoRes.class))).willReturn(accessToken);
+        given(jwtUtils.createRefreshToken(anyString())).willReturn(refreshToken);
 
         // when
         loginFilter.successfulAuthentication(request, response, filterChain, authentication);
 
         // then
-        assertThat(response.getHeader("Authorization")).isEqualTo("Bearer mock-access-token");
+        verify(tokenStore).save(email, refreshToken);
+        assertThat(response.getHeader("Authorization")).isEqualTo("Bearer " + accessToken);
 
         assertThat(response.getCookie("refreshToken")).isNotNull();
-        assertThat(response.getCookie("refreshToken").getValue()).isEqualTo("mock-refresh-token");
+        assertThat(response.getCookie("refreshToken").getValue()).isEqualTo(refreshToken);
         assertThat(response.getCookie("refreshToken").isHttpOnly()).isTrue();
 
         String content = response.getContentAsString();
+        assertThat(content).contains("\"id\":1");
         assertThat(content).contains("plogger님 환영합니다.");
-        assertThat(content).contains("mock-access-token");
+        assertThat(content).contains(accessToken);
     }
 
     @Test

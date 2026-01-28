@@ -5,7 +5,6 @@ import com.plog.global.jpa.entity.BaseEntity;
 import com.plog.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.Formula;
 
 /**

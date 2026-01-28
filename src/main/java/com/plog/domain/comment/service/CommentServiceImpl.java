@@ -21,7 +21,6 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -83,8 +82,7 @@ public class CommentServiceImpl implements CommentService {
                 Sort.by("createDate").ascending()
         );
 
-        Slice<Comment> replySlice = commentRepository.findByParentId(comment.getId(), replyPageable);
-
+        Slice<Comment> replySlice = commentRepository.findRepliesWithMemberAndImageByParentId(comment.getId(), replyPageable);
 
         return new CommentInfoRes(comment, replySlice.map(ReplyInfoRes::new));
     }
@@ -106,7 +104,7 @@ public class CommentServiceImpl implements CommentService {
                 Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
         );
 
-        Slice<Comment> comments = commentRepository.findByPostIdAndParentIsNull(postId, pageable);
+        Slice<Comment> comments = commentRepository.findCommentsWithMemberAndImageByPostId(postId, pageable);
 
         return comments.map(this::convertToCommentInfoRes);
     }
@@ -126,7 +124,7 @@ public class CommentServiceImpl implements CommentService {
                 Sort.by(Sort.Direction.ASC, CommentConstants.DEFAULT_SORT_FIELD)
         );
 
-        Slice<Comment> replies = commentRepository.findByParentId(commentId, pageable);
+        Slice<Comment> replies = commentRepository.findRepliesWithMemberAndImageByParentId(commentId, pageable);
 
         return replies.map(ReplyInfoRes::new);
     }

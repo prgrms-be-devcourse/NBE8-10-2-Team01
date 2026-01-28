@@ -26,8 +26,8 @@ import java.nio.charset.StandardCharsets;
 /**
  * 사용자 로그인을 처리하고 JWT 토큰을 발급하는 필터입니다.
  * <p>
- * JSON 바디를 통한 로그인을 처리하며,
- * 인증 성공 시 Access Token(헤더)과 Refresh Token(HttpOnly 쿠키)을 반환합니다.
+ * {@code /api/members/sign-in} 경로로 JSON 바디를 통한 로그인을 처리하며,
+ * 인증 성공 시 Access Token과 Refresh Token을 반환하고 Refresh Token을 서버 측 {@link TokenStore}(Caffeine)에 기록하여 세션을 관리합니다.
  *
  * <p><b>상속 정보:</b><br>
  * {@link UsernamePasswordAuthenticationFilter}를 상속받아 인증 시도 및 성공/실패 로직을 재정의합니다.
@@ -53,12 +53,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     private final ObjectMapper objectMapper;
     private final JwtUtils jwtUtils;
     private final TokenResolver tokenResolver;
+    private final TokenStore tokenStore;
 
-    public LoginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, JwtUtils jwtUtils, TokenResolver tokenResolver) {
+    public LoginFilter(AuthenticationManager authenticationManager, ObjectMapper objectMapper, JwtUtils jwtUtils, TokenResolver tokenResolver, TokenStore tokenStore) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
         this.jwtUtils = jwtUtils;
         this.tokenResolver = tokenResolver;
+        this.tokenStore = tokenStore;
 
         setFilterProcessesUrl("/api/members/sign-in");
     }
@@ -89,10 +91,9 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     /**
-     * 인증이 성공했을 때 실행되며, JWT 토큰을 생성하여 클라이언트에게 반환합니다.
+     * 인증 성공 시 호출되며, 토큰을 생성하고 서버 저장소에 Refresh Token을 보관합니다.
      * <p>
-     * - Access Token: Authorization 헤더에 Bearer 타입으로 전달 <br>
-     * - Refresh Token: 보안을 위해 HttpOnly 쿠키에 저장
+     * 클라이언트에게 JSON 형태로 성공 메시지와 사용자 정보를 반환합니다.
      */
     @Override
     protected void successfulAuthentication(
@@ -108,9 +109,11 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String refreshToken = jwtUtils.createRefreshToken(user.getEmail());
         tokenResolver.setHeader(response, accessToken);
         tokenResolver.setCookie(response, refreshToken);
+        tokenStore.save(user.getEmail(), refreshToken);
 
         response.setContentType("application/json;charset=UTF-8");
         AuthInfoRes authInfoRes = AuthInfoRes.builder()
+                .id(user.getId())
                 .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .build();

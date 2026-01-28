@@ -18,8 +18,8 @@ import java.util.List;
  * {@link java.lang.Record} 클래스를 암시적으로 상속받으며, 모든 필드는 final로 선언됩니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code PostResponse(Long id, String title, String content, String summary, int viewCount, LocalDateTime createDate)} <br>
- * 레코드 정의에 따른 표준 생성자를 사용합니다. <br>
+ * {@code PostInfoRes(Long id, String title, String content, int viewCount, LocalDateTime createDate, LocalDateTime modifyDate, Slice<CommentInfoRes> comments, String nickname, String profileImage)} <br>
+ * 레코드 정의에 따른 표준 생성자를 사용합니다.
  *
  * <p><b>빈 관리:</b><br>
  * 별도의 빈으로 관리되지 않으며, 서비스나 컨트롤러 계층에서 필요 시 생성하여 반환합니다.
@@ -35,25 +35,25 @@ public record PostInfoRes(
         Long id,
         String title,
         String content,
-        String summary,
         int viewCount,
         LocalDateTime createDate,
         LocalDateTime modifyDate,
         Slice<CommentInfoRes> comments,
         List<String> hashtags
+        String nickname,
+        String profileImage
 ) {
     /**
-     * Post 엔티티 객체를 PostResponse DTO로 변환하는 정적 팩토리 메서드입니다.
+     * Post 엔티티 객체를 PostInfoRes DTO로 변환하는 정적 팩토리 메서드입니다.
      *
      * @param post 변환 대상 엔티티
-     * @return 필드값이 매핑된 PostResponse 객체
+     * @return 필드값이 매핑된 PostInfoRes 객체
      */
     public static PostInfoRes from(Post post) {
         return new PostInfoRes(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.getSummary(),
                 post.getViewCount(),
                 post.getCreateDate(),
                 post.getModifyDate(),
@@ -62,15 +62,22 @@ public record PostInfoRes(
                         .map(PostHashTag::getDisplayName)
                         .toList()
 
+                post.getMember().getNickname(),
+                post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
         );
     }
-
+    /**
+     * Post 엔티티와 댓글 목록을 받아 PostInfoRes DTO로 변환하는 정적 팩토리 메서드입니다.
+     *
+     * @param post     변환 대상 엔티티
+     * @param comments 게시물에 속한 댓글 슬라이스 데이터
+     * @return 필드값과 댓글 목록이 매핑된 PostInfoRes 객체
+     */
     public static PostInfoRes from(Post post, Slice<CommentInfoRes> comments) {
         return new PostInfoRes(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                post.getSummary(),
                 post.getViewCount(),
                 post.getCreateDate(),
                 post.getModifyDate(),
@@ -78,6 +85,8 @@ public record PostInfoRes(
                 post.getPostHashTags().stream()
                         .map(PostHashTag::getDisplayName)
                         .toList()
+                post.getMember().getNickname(),
+                post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
         );
     }
 }

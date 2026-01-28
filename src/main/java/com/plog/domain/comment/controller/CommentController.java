@@ -1,21 +1,16 @@
 package com.plog.domain.comment.controller;
 
-import com.plog.domain.comment.constant.CommentConstants;
 import com.plog.domain.comment.dto.CommentCreateReq;
 import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.dto.CommentUpdateReq;
 import com.plog.domain.comment.dto.ReplyInfoRes;
-import com.plog.domain.comment.entity.Comment;
 import com.plog.domain.comment.service.CommentService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.response.Response;
 import com.plog.global.security.SecurityUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -74,9 +69,6 @@ public class CommentController {
             @RequestParam(name = "pageNumber", defaultValue = "0") int pageNumber,
             @AuthenticationPrincipal SecurityUser securityUser
     ) {
-
-        Long currentMemberId = (securityUser != null) ? securityUser.getId() : null;
-
         Slice<CommentInfoRes> commentList = commentService.getCommentsByPostId(postId, pageNumber);
 
         return ResponseEntity.ok(CommonResponse.success(commentList, "댓글 조회 성공"));

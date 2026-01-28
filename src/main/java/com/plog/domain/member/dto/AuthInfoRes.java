@@ -15,11 +15,13 @@ import lombok.Builder;
 
 @Builder
 public record AuthInfoRes(
+        Long id,
         String nickname,
         String accessToken
 ) {
     public static AuthInfoRes from(AuthLoginResult res) {
         return AuthInfoRes.builder()
+                .id(res.id())
                 .nickname(res.nickname())
                 .accessToken(res.accessToken())
                 .build();

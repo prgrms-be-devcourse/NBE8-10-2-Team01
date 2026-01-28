@@ -4,6 +4,7 @@ package com.plog.domain.member.service;
 import com.plog.domain.member.dto.AuthSignUpReq;
 import com.plog.domain.member.dto.MemberInfoRes;
 import com.plog.global.exception.exceptions.AuthException;
+import com.plog.global.security.TokenStore;
 
 /**
  * 인증 및 인가와 관련된 비즈니스 로직을 정의하는 인터페이스입니다.
@@ -32,6 +33,18 @@ public interface AuthService {
      * @throws AuthException 이미 존재하는 이메일일 경우 발생
      */
     Long signUp(AuthSignUpReq req);
+
+    /**
+     * 리프레시 토큰을 무효화하여 로그아웃 처리를 수행합니다.
+     * <p><b>구현 로직:</b><br>
+     * 1. 전달받은 토큰이 유효한지 확인합니다.<br>
+     * 2. 토큰에서 사용자 식별값(Email)을 추출합니다.<br>
+     * 3. {@link TokenStore}에서 해당 사용자의 세션 정보(RefreshToken)를 삭제합니다.<br>
+     * 유효하지 않은 토큰인 경우, 이미 로그아웃된 상태로 간주하여 예외를 던지지 않고 로그만 남깁니다.
+     *
+     * @param refreshToken 무효화할 리프레시 토큰
+     */
+    void logout(String refreshToken);
 
     /**
      * 회원 ID를 기준으로 사용자 정보를 조회합니다.

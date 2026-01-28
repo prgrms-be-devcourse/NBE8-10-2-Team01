@@ -4,6 +4,7 @@ import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostListRes;
 import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.repository.PostRepository;
@@ -48,7 +49,7 @@ public class PostServiceTest {
     void createPostSuccess() {
 
         Long memberId = 1L;
-        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**");
+        PostCreateReq requestDto = new PostCreateReq("테스트 제목", "# Hello\n**Spring Boot**", null);
 
         Member mockMember = Member.builder().build();
 
@@ -76,7 +77,7 @@ public class PostServiceTest {
 
         Long memberId = 1L;
         String longContent = "가".repeat(200);
-        PostCreateReq requestDto = new PostCreateReq("제목", longContent);
+        PostCreateReq requestDto = new PostCreateReq("제목", longContent, null);
 
         Member mockMember = Member.builder().build();
 
@@ -102,8 +103,13 @@ public class PostServiceTest {
     @DisplayName("전체 게시글 조회 시 리포지토리의 결과를 Slice DTO로 변환하여 반환한다")
     void getPostsSuccess() {
         // [Given]
+        Member author = new Member("email", "password", "nickname", null);
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
-        Post post = Post.builder().title("테스트 제목").content("테스트 내용").build();
+        Post post = Post.builder()
+                .title("테스트 제목")
+                .content("테스트 내용")
+                .member(author)
+                .build();
 
         // 리포지토리는 Page를 반환 (Page는 Slice를 상속함)
         Page<Post> mockPage = new PageImpl<>(List.of(post), pageable, 1);
@@ -111,7 +117,7 @@ public class PostServiceTest {
         given(postRepository.findAllWithMember(any(Pageable.class))).willReturn(mockPage);
 
         // [When]
-        Slice<PostInfoRes> result = postService.getPosts(pageable);
+        Slice<PostListRes> result = postService.getPosts(pageable);
 
         // [Then]
         assertThat(result.getContent()).hasSize(1);
@@ -145,7 +151,7 @@ public class PostServiceTest {
         String newContent = "수정된 본문 내용입니다. 이 내용은 150자 미만이므로 그대로 요약이 됩니다.";
 
         // [When]
-        postService.updatePost(memberId, postId, new PostUpdateReq(newTitle, newContent));
+        postService.updatePost(memberId, postId, new PostUpdateReq(newTitle, newContent, null));
 
         // [Then]
         // 더티 체킹에 의해 변경될 엔티티의 상태를 검증합니다.
@@ -162,7 +168,7 @@ public class PostServiceTest {
         given(postRepository.findById(anyLong())).willReturn(Optional.empty());
 
         // [When & Then]
-        assertThatThrownBy(() -> postService.updatePost(memberId, 99L, new PostUpdateReq("제목", "내용")))
+        assertThatThrownBy(() -> postService.updatePost(memberId, 99L, new PostUpdateReq("제목", "내용", null)))
                 .isInstanceOf(PostException.class)
                 .hasMessageContaining("존재하지 않는 게시물입니다.");
     }
@@ -184,7 +190,7 @@ public class PostServiceTest {
         given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
         // [When & Then]
-        assertThatThrownBy(() -> postService.updatePost(otherMemberId, postId, new PostUpdateReq("제목", "내용")))
+        assertThatThrownBy(() -> postService.updatePost(otherMemberId, postId, new PostUpdateReq("제목", "내용", null)))
                 .isInstanceOf(AuthException.class)
                 .hasMessageContaining("수정할 권한이 없습니다.");
     }
@@ -266,6 +272,7 @@ public class PostServiceTest {
     void getPostsByMemberSuccess() {
         // [Given]
         Long memberId = 1L;
+        Member author = new Member("email", "password", "nickname", null);
         // 페이징 정보 설정 (0페이지, 10개씩 조회)
         Pageable pageable = PageRequest.of(0, 10);
 
@@ -273,6 +280,7 @@ public class PostServiceTest {
                 .title("테스트 제목")
                 .content("테스트 본문")
                 .summary("테스트 요약")
+                .member(author)
                 .viewCount(10)
                 .build();
 
@@ -294,7 +302,6 @@ public class PostServiceTest {
         PostInfoRes dto = result.getContent().get(0);
         assertThat(dto.title()).isEqualTo("테스트 제목");
         assertThat(dto.content()).isEqualTo("테스트 본문");
-        assertThat(dto.summary()).isEqualTo("테스트 요약");
         assertThat(dto.viewCount()).isEqualTo(10);
 
         // 3. 리포지토리 호출 확인 (새로운 메서드와 파라미터 기준)

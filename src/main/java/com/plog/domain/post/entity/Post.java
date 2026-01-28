@@ -61,15 +61,17 @@ public class Post extends BaseEntity{
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostHashTag> postHashTags = new ArrayList<>();
 
+    private String thumbnail;
 
     public void incrementViewCount() {
         this.viewCount++;
     }
 
-    public void update(String title, String content, String summary) {
+    public void update(String title, String content, String summary, String thumbnail) {
         this.title = title;
         this.content = content;
         this.summary = summary;
+        this.thumbnail = thumbnail;
     }
 
 }

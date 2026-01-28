@@ -42,7 +42,7 @@ custom:
   jwt:
     secretKey: ${SECRET_KEY}
     access-expiration: 1800000 # 30분
-    refresh-expiration: 3153600000000 # 약 100년
+    refresh-expiration: 604800000 # 1주일
   cookie:
     domain: ${COOKIE_DOMAIN:localhost}
     secure: ${COOKIE_SECURE:false}

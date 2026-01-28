@@ -4,9 +4,11 @@ import com.plog.domain.member.dto.AuthSignInReq;
 import com.plog.domain.member.dto.AuthInfoRes;
 import com.plog.domain.member.dto.AuthSignUpReq;
 import com.plog.domain.member.service.AuthService;
+import com.plog.domain.post.service.PostTemplateService;
 import com.plog.global.response.CommonResponse;
 import com.plog.global.response.Response;
 import com.plog.global.security.TokenResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,7 @@ import java.net.URI;
 public class AuthController {
     private final AuthService authService;
     private final TokenResolver tokenResolver;
+    private final PostTemplateService postTemplateService;
 
     /**
      * 새로운 회원을 등록(회원가입)합니다.
@@ -61,6 +64,7 @@ public class AuthController {
             @Valid @RequestBody AuthSignUpReq req
     ) {
         Long memberId = authService.signUp(req);
+        postTemplateService.initTemplateSeedOfUser(memberId);
 
         return ResponseEntity.created(URI.create(("/api/members/"+memberId))).build();
     }
@@ -85,14 +89,17 @@ public class AuthController {
     /**
      * 로그아웃을 수행합니다.
      * <p>
-     * 브라우저에 저장된 인증용 쿠키(refreshToken)를 삭제하며, 세션 상태를 무효화합니다.
-     * 클라이언트 측에서도 보관 중인 Access Token을 삭제해야 완벽한 로그아웃이 이루어집니다.
+     * 쿠키에서 리프레시 토큰을 추출하여 서버 측 저장소에서 무효화하고,
+     * 클라이언트 브라우저의 인증 쿠키를 삭제 처리합니다.
      *
+     * @param request  토큰 추출을 위한 HttpServletRequest
+     * @param response 쿠키 삭제 설정을 위한 HttpServletResponse
      * @return 로그아웃 완료 메시지를 포함한 공통 응답 객체 (200 OK)
      */
     @GetMapping("/logout")
-    public ResponseEntity<Response<Void>> logout(HttpServletResponse response) {
-        // TODO: DB 도입 시 서비스 쪽으로 로직 이동 필요
+    public ResponseEntity<Response<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = tokenResolver.resolveRefreshToken(request);
+        authService.logout(refreshToken);
         tokenResolver.deleteRefreshTokenCookie(response);
         return ResponseEntity.ok(
                 CommonResponse.success(null, "로그아웃 되었습니다.")

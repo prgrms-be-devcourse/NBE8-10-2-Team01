@@ -2,9 +2,11 @@ package com.plog.domain.post.controller;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.plog.domain.comment.dto.CommentInfoRes;
+import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.service.AuthService;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
+import com.plog.domain.post.dto.PostListRes;
 import com.plog.domain.post.dto.PostUpdateReq;
 import com.plog.domain.post.entity.Post;
 import com.plog.domain.post.service.PostService;
@@ -32,7 +34,6 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -99,7 +100,7 @@ class PostControllerTest {
         Long mockMemberId = 1L;
         Long createdPostId = 100L;
 
-        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문");
+        PostCreateReq request = new PostCreateReq("게시글 제목", "게시글 본문", null);
 
         given(postService.createPost(eq(mockMemberId), any(PostCreateReq.class)))
                 .willReturn(createdPostId);
@@ -117,9 +118,11 @@ class PostControllerTest {
     @DisplayName("게시글 상세 조회 시 응답 데이터 형식을 확인한다")
     void getPostSuccess() throws Exception {
         // [Given]
+        Member author = new Member("email", "password", "nickname", null);
         Post mockPost = Post.builder()
                 .title("조회 제목")
                 .content("조회 본문")
+                .member(author)
                 .build();
 
         Slice<CommentInfoRes> mockComments = new SliceImpl<>(Collections.emptyList());
@@ -143,12 +146,13 @@ class PostControllerTest {
     @DisplayName("게시글 목록 조회 시 페이징 처리된 Slice 리스트를 반환한다")
     void getPostsSuccess() throws Exception {
         // [Given]
+        Member author = new Member("email", "password", "nickname", null);
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Post post1 = Post.builder().title("제목1").content("내용1").build();
-        Post post2 = Post.builder().title("제목2").content("내용2").build();
+        Post post1 = Post.builder().title("제목1").content("내용1").member(author).build();
+        Post post2 = Post.builder().title("제목2").content("내용2").member(author).build();
 
-        Slice<PostInfoRes> sliceResponse = new SliceImpl<>(
-                List.of(PostInfoRes.from(post2), PostInfoRes.from(post1)),
+        Slice<PostListRes> sliceResponse = new SliceImpl<>(
+                List.of(PostListRes.from(post2), PostListRes.from(post1)),
                 pageable,
                 false // 다음 페이지가 없다고 가정
         );
@@ -180,7 +184,7 @@ class PostControllerTest {
     void updatePostSuccess() throws Exception {
         // [Given]
         Long postId = 1L;
-        PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문");
+        PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문", null);
 
         // [When]
         ResultActions resultActions = mvc.perform(
@@ -228,7 +232,7 @@ class PostControllerTest {
 
         // PostInfoRes 데이터 준비
         PostInfoRes res = new PostInfoRes(
-                100L, "제목", "본문", "요약", 5, now, now, null
+                100L, "제목", "본문", 5, now, now, null, "nickname", "imageURL"
         );
 
         // SliceImpl을 사용하여 서비스 반환값 모킹 (데이터 1개, 다음 페이지 없음)
@@ -255,7 +259,6 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.data.content[0].id").value(100))
                 .andExpect(jsonPath("$.data.content[0].title").value("제목"))
                 .andExpect(jsonPath("$.data.content[0].content").value("본문"))
-                .andExpect(jsonPath("$.data.content[0].summary").value("요약"))
                 .andExpect(jsonPath("$.data.content[0].viewCount").value(5))
                 .andExpect(jsonPath("$.data.content[0].createDate").exists())
                 .andExpect(jsonPath("$.data.content[0].modifyDate").exists())
