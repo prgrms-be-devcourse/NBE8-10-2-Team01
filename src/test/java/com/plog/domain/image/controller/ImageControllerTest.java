@@ -2,17 +2,20 @@ package com.plog.domain.image.controller;
 
 import com.plog.domain.image.dto.ImageUploadRes;
 import com.plog.domain.image.service.ImageService;
-import com.plog.global.security.JwtUtils;
+import com.plog.global.security.SecurityUser;
+import com.plog.testUtil.SecurityTestConfig;
 import com.plog.testUtil.WebMvcTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.List;
@@ -20,28 +23,36 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * ImageController의 웹 계층 단위 테스트입니다.
- * <p>
- * <b>테스트 범위:</b> Controller Layer (Service, Repository 제외) <br>
- * <b>검증 대상:</b> API 요청 매핑, 파라미터 유효성 검사, 응답 Status 및 Body 포맷 <br>
- * <b>Mocking:</b> {@code ImageService}는 Mock 객체로 대체하여 비즈니스 로직과 격리합니다.
- *
- * @see ImageController
  */
-
 @WebMvcTest(ImageController.class)
 @ActiveProfiles("test")
+@Import(SecurityTestConfig.class) // [추가] SecurityTestConfig 가져오기
 class ImageControllerTest extends WebMvcTestSupport {
-
 
     @MockitoBean
     private ImageService imageService;
 
+    // [추가] 테스트 실행 전 가짜 인증 정보 주입
+    @BeforeEach
+    void setUpUser() {
+        // 1. SecurityUser를 Mock으로 생성 (생성자 로직 회피)
+        SecurityUser mockUser = mock(SecurityUser.class);
+
+        // 2. 인증 토큰 생성
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(mockUser, null, null);
+
+        // 3. SecurityContext에 설정 (컨트롤러의 @AuthenticationPrincipal이 이 정보를 읽어감)
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
     @Test
     @DisplayName("이미지 업로드 성공 시 successUrls를 포함한 응답을 반환한다")
@@ -55,7 +66,7 @@ class ImageControllerTest extends WebMvcTestSupport {
                 List.of("http://minio/bucket/images/uuid.jpg"),
                 List.of()
         );
-        given(imageService.uploadImage(any())).willReturn(mockResult);
+        given(imageService.uploadImage(any(), any())).willReturn(mockResult);
 
         ResultActions resultActions = mockMvc
                 .perform(
@@ -92,7 +103,7 @@ class ImageControllerTest extends WebMvcTestSupport {
                 ),
                 List.of()
         );
-        given(imageService.uploadImages(anyList())).willReturn(mockResult);
+        given(imageService.uploadImages(anyList(), any())).willReturn(mockResult);
 
         ResultActions resultActions = mockMvc
                 .perform(
@@ -123,7 +134,7 @@ class ImageControllerTest extends WebMvcTestSupport {
                 List.of("http://minio/uuid1.jpg"),
                 List.of("invalid.txt")
         );
-        given(imageService.uploadImages(anyList())).willReturn(mockResult);
+        given(imageService.uploadImages(anyList(), any())).willReturn(mockResult);
 
         mockMvc.perform(multipart("/api/images/bulk").file(file1))
                 .andExpect(status().isOk())
@@ -140,7 +151,7 @@ class ImageControllerTest extends WebMvcTestSupport {
                 "file", "test.txt", "text/plain", "content".getBytes()
         );
 
-        given(imageService.uploadImage(any()))
+        given(imageService.uploadImage(any(), any()))
                 .willThrow(new com.plog.global.exception.exceptions.ImageException(
                         com.plog.global.exception.errorCode.ImageErrorCode.INVALID_FILE_EXTENSION,
                         "지원하지 않는 파일 형식입니다."

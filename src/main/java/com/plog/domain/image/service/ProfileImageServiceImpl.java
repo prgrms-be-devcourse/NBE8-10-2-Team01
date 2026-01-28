@@ -92,6 +92,7 @@ public class ProfileImageServiceImpl implements ProfileImageService {
                 .originalName(originalFilename)
                 .storedName(storedName)
                 .accessUrl(accessUrl)
+                .uploader(member)
                 .build();
 
         imageRepository.save(newImage);

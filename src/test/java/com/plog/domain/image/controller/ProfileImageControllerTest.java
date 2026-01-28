@@ -2,21 +2,25 @@ package com.plog.domain.image.controller;
 
 import com.plog.domain.image.dto.ProfileImageUploadRes;
 import com.plog.domain.image.service.ProfileImageService;
-import com.plog.global.security.JwtUtils;
+import com.plog.global.security.SecurityUser;
+import com.plog.testUtil.SecurityTestConfig;
 import com.plog.testUtil.WebMvcTestSupport;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,11 +36,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(ProfileImageController.class)
 @ActiveProfiles("test")
+@Import(SecurityTestConfig.class) // [추가] SecurityTestConfig 적용
 class ProfileImageControllerTest extends WebMvcTestSupport {
 
     @MockitoBean
     private ProfileImageService profileImageService;
 
+    // [추가] 테스트 실행 전 가짜 인증 정보 주입
+    @BeforeEach
+    void setUpUser() {
+        // 1. SecurityUser를 Mock으로 생성 (생성자 로직 회피)
+        SecurityUser mockUser = mock(SecurityUser.class);
+
+        // 2. 인증 토큰 생성
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(mockUser, null, null);
+
+        // 3. SecurityContext에 설정 (컨트롤러의 @AuthenticationPrincipal이 이 정보를 읽어감)
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
     @Test
     @DisplayName("프로필 이미지 업로드 성공 시 변경된 URL을 반환한다")
@@ -44,16 +62,16 @@ class ProfileImageControllerTest extends WebMvcTestSupport {
         // [Given]
         Long memberId = 1L;
         MockMultipartFile file = new MockMultipartFile("file", "profile.jpg", "image/jpeg", "data".getBytes());
-        
+
         ProfileImageUploadRes mockResponse = new ProfileImageUploadRes(memberId, "http://minio/new-profile.jpg");
         given(profileImageService.uploadProfileImage(eq(memberId), any())).willReturn(mockResponse);
 
         // [When & Then]
         mockMvc.perform(
-                multipart("/api/members/{memberId}/profile-image", memberId)
-                        .file(file)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
-        )
+                        multipart("/api/members/{memberId}/profile-image", memberId)
+                                .file(file)
+                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                )
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))

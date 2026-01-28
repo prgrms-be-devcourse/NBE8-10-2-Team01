@@ -1,5 +1,7 @@
 package com.plog.domain.image.entity;
 
+import com.plog.domain.member.entity.Member;
+import com.plog.domain.post.entity.Post;
 import com.plog.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,9 +9,8 @@ import lombok.*;
 /**
  * 게시글에 첨부되는 이미지 파일의 메타데이터를 관리하는 JPA 엔티티입니다.
  * <p>
- * 물리적 파일은 Object Storage(MinIO/S3)에 저장하고, DB에는 해당 파일의
+ * 물리적 파일은 Object Storage(MinIO)에 저장하고, DB에는 해당 파일의
  * 원본명, 저장된 키 값(Stored Name), 접근 URL 등 메타데이터만 보관합니다.
- * 게시글과 다대일(N:1) 관계를 맺으며, 게시글 삭제 시 고아 객체 제거 로직 등의 기준이 됩니다.
  *
  * <p><b>상속 정보:</b><br>
  * {@link BaseEntity}를 상속받아 생성일시(createdAt)와 수정일시(updatedAt)를 자동으로 관리합니다.
@@ -41,4 +42,7 @@ public class Image extends BaseEntity {
     @Column(nullable = false)
     private String accessUrl;
 
-}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member uploader;
+    }
