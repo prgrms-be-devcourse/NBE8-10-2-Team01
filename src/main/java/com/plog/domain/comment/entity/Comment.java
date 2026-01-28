@@ -56,6 +56,10 @@ public class Comment extends BaseEntity {
     @Builder.Default
     private boolean deleted = false;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private long likeCount = 0;
+
     public void modify(String content){
         this.content = content;
     }
@@ -63,6 +67,16 @@ public class Comment extends BaseEntity {
     public void softDelete(){
         this.deleted = true;
         this.content = "[삭제된 댓글입니다.]";
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 
     @Formula("(SELECT count(*) FROM comment c WHERE c.parent_id = id AND c.deleted = false)")

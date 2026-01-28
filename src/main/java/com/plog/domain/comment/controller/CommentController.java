@@ -158,4 +158,17 @@ public class CommentController {
         );
     }
 
+    @PostMapping("/{commentId}/likes")
+    public ResponseEntity<CommonResponse<Boolean>> toggleLike(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal SecurityUser securityUser
+    ) {
+
+        boolean isLiked = commentService.toggleCommentLike(commentId, securityUser.getId());
+
+        String message = isLiked ? "좋아요를 눌렀습니다." : "좋아요를 취소했습니다.";
+
+        return ResponseEntity.ok(CommonResponse.success(isLiked, message));
+    }
+
 }

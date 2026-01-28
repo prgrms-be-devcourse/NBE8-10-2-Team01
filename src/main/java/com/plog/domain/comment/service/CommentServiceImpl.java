@@ -3,6 +3,8 @@ package com.plog.domain.comment.service;
 import com.plog.domain.comment.constant.CommentConstants;
 import com.plog.domain.comment.dto.CommentCreateReq;
 import com.plog.domain.comment.dto.ReplyInfoRes;
+import com.plog.domain.comment.entity.CommentLike;
+import com.plog.domain.comment.repository.CommentLikeRepository;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.domain.post.entity.Post;
@@ -21,6 +23,8 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     @Override
     @Transactional
@@ -174,6 +179,33 @@ public class CommentServiceImpl implements CommentService {
             comment.softDelete();
         }else{
             commentRepository.delete(comment);
+        }
+    }
+
+
+    @Transactional
+    public boolean toggleCommentLike(Long commentId, Long memberId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_AUTH_FAIL));
+
+        Optional<CommentLike> existingLike = commentLikeRepository.findByCommentAndMember(comment, member);
+
+        if (existingLike.isPresent()) {
+
+            commentLikeRepository.delete(existingLike.get());
+            comment.decreaseLikeCount();
+            return false;
+        } else {
+            // 2. 좋아요가 없다면: 추가
+            CommentLike newLike = CommentLike.builder()
+                    .comment(comment)
+                    .member(member)
+                    .build();
+            commentLikeRepository.save(newLike);
+            comment.increaseLikeCount(); // Comment 엔티티 내 likeCount 필드 증가
+            return true; // 좋아요 추가됨을 알림
         }
     }
 }

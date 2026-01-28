@@ -116,4 +116,7 @@ public interface CommentService {
      * @throws IllegalArgumentException 댓글이 존재하지 않을 경우
      */
     void deleteComment(Long commentId, Long memberId);
+
+
+    boolean toggleCommentLike(Long commentId, Long memberId);
 }

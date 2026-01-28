@@ -37,6 +37,7 @@ public record CommentInfoRes(
         long postId,
         LocalDateTime createDate,
         LocalDateTime modifyDate,
+        long likeCount,
         long replyCount,
         Slice<ReplyInfoRes> previewReplies
 ) {
@@ -53,6 +54,7 @@ public record CommentInfoRes(
                 comment.getPost().getId(),
                 comment.getCreateDate(),
                 comment.getModifyDate(),
+                comment.getLikeCount(),
                 comment.getReplyCount(),
                 previewReplies
         );
