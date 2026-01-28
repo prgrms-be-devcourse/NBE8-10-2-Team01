@@ -3,7 +3,9 @@ package com.plog.domain.comment.service;
 import com.plog.domain.comment.dto.CommentCreateReq;
 import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.dto.ReplyInfoRes;
+import com.plog.global.exception.exceptions.CommentException;
 import org.springframework.data.domain.Slice;
+import com.plog.global.exception.exceptions.AuthException;
 
 
 /**
@@ -118,5 +120,18 @@ public interface CommentService {
     void deleteComment(Long commentId, Long memberId);
 
 
+    /**
+     * 댓글의 좋아요 여부를 변환한다.
+     *
+     * <p>
+     * 현재 댓글의 자식 댓글이 있는 경우에만 소프트 삭제를 기능하도록 하였다.
+     * </p>
+     *
+     * @param commentId 해당 댓글 식별자
+     * @param memberId 작성자 식별자
+     *
+     * @throws CommentException 해당 댓글을 찾을 수 없는 경우
+     * @throws AuthException 해당 회원 정보를 찾을 수 없는 경우
+     */
     boolean toggleCommentLike(Long commentId, Long memberId);
 }

@@ -186,9 +186,18 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public boolean toggleCommentLike(Long commentId, Long memberId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
+                .orElseThrow(() -> new CommentException(
+                        CommentErrorCode.COMMENT_NOT_FOUND,
+                        "[CommentService#toggleCommentLike] can't find comment by id : " + commentId,
+                        "존재하지 않는 댓글입니다."
+                ));
+
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new AuthException(AuthErrorCode.USER_AUTH_FAIL));
+                .orElseThrow(() -> new AuthException(
+                        AuthErrorCode.USER_NOT_FOUND, // 또는 USER_AUTH_FAIL
+                        "[CommentService#toggleCommentLike] can't find member by id : " + memberId,
+                        "사용자 정보를 찾을 수 없습니다."
+                ));
 
         Optional<CommentLike> existingLike = commentLikeRepository.findByCommentAndMember(comment, member);
 
@@ -198,14 +207,13 @@ public class CommentServiceImpl implements CommentService {
             comment.decreaseLikeCount();
             return false;
         } else {
-            // 2. 좋아요가 없다면: 추가
             CommentLike newLike = CommentLike.builder()
                     .comment(comment)
                     .member(member)
                     .build();
             commentLikeRepository.save(newLike);
-            comment.increaseLikeCount(); // Comment 엔티티 내 likeCount 필드 증가
-            return true; // 좋아요 추가됨을 알림
+            comment.increaseLikeCount();
+            return true;
         }
     }
 }

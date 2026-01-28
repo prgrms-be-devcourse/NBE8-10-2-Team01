@@ -158,6 +158,13 @@ public class CommentController {
         );
     }
 
+    /**
+     * 댓글, 대댓글에 좋아요 여부를 전달합니다.
+     *
+     * @param commentId 해당 댓글의 식별자
+     * @param securityUser 현재 인증된 사용자 정보
+     * @return 해당 댓글 식별자와 좋아요 변환 완료 메시지
+     */
     @PostMapping("/{commentId}/likes")
     public ResponseEntity<CommonResponse<Boolean>> toggleLike(
             @PathVariable Long commentId,
