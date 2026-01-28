@@ -1,8 +1,10 @@
 package com.plog.domain.post.dto;
 
+import com.plog.domain.hashtag.entity.PostHashTag;
 import com.plog.domain.post.entity.Post;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 게시물 정보 목록을 클라이언트에게 전달하기 위한 응답 데이터 레코드입니다.
@@ -34,6 +36,7 @@ public record PostListRes(
         int viewCount,
         LocalDateTime createDate,
         LocalDateTime modifyDate,
+        List<String> hashtags,
         String thumbnail,
         String nickname,
         String profileImage
@@ -52,6 +55,9 @@ public record PostListRes(
                 post.getViewCount(),
                 post.getCreateDate(),
                 post.getModifyDate(),
+                post.getPostHashTags().stream()
+                        .map(PostHashTag::getDisplayName)
+                        .toList(),
                 post.getThumbnail(),
                 post.getMember().getNickname(),
                 post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
