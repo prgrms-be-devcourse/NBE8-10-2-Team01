@@ -53,7 +53,7 @@ class LoginFilterTest {
     @Mock private AuthenticationManager authenticationManager;
     @Mock
     private JwtUtils jwtUtils;
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Spy
     private TokenResolver tokenResolver = new TokenResolver(3600000, "localhost", false);
 
@@ -110,6 +110,7 @@ class LoginFilterTest {
         assertThat(response.getCookie("refreshToken").isHttpOnly()).isTrue();
 
         String content = response.getContentAsString();
+        assertThat(content).contains("\"id\":1");
         assertThat(content).contains("plogger님 환영합니다.");
         assertThat(content).contains("mock-access-token");
     }

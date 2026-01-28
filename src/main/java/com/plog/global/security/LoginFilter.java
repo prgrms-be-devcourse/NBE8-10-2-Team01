@@ -111,6 +111,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         response.setContentType("application/json;charset=UTF-8");
         AuthInfoRes authInfoRes = AuthInfoRes.builder()
+                .id(user.getId())
                 .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .build();
