@@ -41,6 +41,7 @@ public record PostInfoRes(
         Slice<CommentInfoRes> comments,
         List<String> hashtags,
         String thumbnail,
+        Long authorid,
         String nickname,
         String profileImage
 ) {
@@ -63,6 +64,7 @@ public record PostInfoRes(
                         .map(PostHashTag::getDisplayName)
                         .toList(),
                 post.getThumbnail(),
+                post.getMember().getId(),
                 post.getMember().getNickname(),
                 post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
         );
@@ -87,6 +89,7 @@ public record PostInfoRes(
                         .map(PostHashTag::getDisplayName)
                         .toList(),
                 post.getThumbnail(),
+                post.getMember().getId(),
                 post.getMember().getNickname(),
                 post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
         );
