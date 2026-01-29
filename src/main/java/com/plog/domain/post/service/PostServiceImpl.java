@@ -5,8 +5,10 @@ import com.plog.domain.comment.dto.CommentInfoRes;
 import com.plog.domain.comment.dto.ReplyInfoRes;
 import com.plog.domain.comment.entity.Comment;
 import com.plog.domain.comment.repository.CommentRepository;
+import com.plog.domain.hashtag.entity.HashTag;
+import com.plog.domain.hashtag.entity.PostHashTag;
+import com.plog.domain.hashtag.repository.HashTagRepository;
 import com.plog.domain.hashtag.repository.PostHashTagRepository;
-import com.plog.domain.hashtag.service.HashTagService;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.member.repository.MemberRepository;
 import com.plog.domain.post.dto.PostCreateReq;
@@ -31,6 +33,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * {@link PostService} 인터페이스의 기본 구현체입니다.
  * <p>
@@ -54,8 +58,8 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final MemberRepository memberRepository;
-    private final HashTagService hashTagService;
     private final PostHashTagRepository postHashTagRepository;
+    private final HashTagRepository hashTagRepository;
 
     @Override
     @Transactional
@@ -72,8 +76,11 @@ public class PostServiceImpl implements PostService {
                 .status(PostStatus.PUBLISHED)
                 .thumbnail(req.thumbnail())
                 .build();
+        post = postRepository.save(post);
 
-        return postRepository.save(post).getId();
+        applyTags(post, req.hashtags());
+
+        return post.getId();
     }
 
     @Override
@@ -136,7 +143,9 @@ public class PostServiceImpl implements PostService {
 
         post.update(req.title(), req.content(), summary, req.thumbnail());
 
-        hashTagService.updatePostHashTag(postId, req.hashtags());
+        postHashTagRepository.deleteAllByPostId(postId);
+
+        applyTags(post, req.hashtags()); // 공통 로직 호출
     }
 
     @Override
@@ -195,5 +204,30 @@ public class PostServiceImpl implements PostService {
             return plainText;
         }
         return plainText.substring(0, MAX_SUMMARY_LENGTH) + "...";
+    }
+
+    private void applyTags(Post post, List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) return;
+
+        for (String rawName : tagNames) {
+            String normalizedName = normalizeTag(rawName);
+
+            HashTag hashTag = hashTagRepository.findByName(normalizedName)
+                    .orElseGet(() -> hashTagRepository.save(new HashTag(normalizedName)));
+
+            if (!postHashTagRepository.existsByPostIdAndHashTagId(post.getId(), hashTag.getId())) {
+                PostHashTag postHashTag = PostHashTag.builder()
+                        .post(post)
+                        .hashTag(hashTag)
+                        .displayName(rawName)
+                        .build();
+
+                postHashTagRepository.save(postHashTag);
+            }
+        }
+    }
+
+    private String normalizeTag(String name) {
+        return name.trim().toLowerCase().replace(" ", "_");
     }
 }

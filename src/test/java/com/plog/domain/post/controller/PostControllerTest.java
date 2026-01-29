@@ -1,7 +1,6 @@
 package com.plog.domain.post.controller;
 
 import com.plog.domain.comment.dto.CommentInfoRes;
-import com.plog.domain.hashtag.service.HashTagService;
 import com.plog.domain.member.entity.Member;
 import com.plog.domain.post.dto.PostCreateReq;
 import com.plog.domain.post.dto.PostInfoRes;
@@ -47,9 +46,6 @@ class PostControllerTest extends WebMvcTestSupport {
 
     @MockitoBean
     private PostService postService;
-
-    @MockitoBean
-    private HashTagService hashTagService;
 
     @Test
     @DisplayName("게시글 생성 시 인증된 사용자가 요청하면 성공한다")
