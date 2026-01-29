@@ -2,6 +2,8 @@ package com.plog.domain.post.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
+
 /**
  * 게시물 수정을 위해 클라이언트로부터 전달받는 요청 데이터 레코드입니다.
  * <p>
@@ -12,7 +14,7 @@ import jakarta.validation.constraints.NotBlank;
  * {@link java.lang.Record} 클래스를 암시적으로 상속받으며, 불변(Immutable) 객체입니다.
  *
  * <p><b>주요 생성자:</b><br>
- * {@code PostUpdateReq(String title, String content, String thumbnail)} <br>
+ * {@code PostUpdateReq(String title, String content, String thumbnail, List<String> hashtags)} <br>
  * 모든 필드를 초기화하는 컴팩트 생성자가 자동으로 정의됩니다.
  *
  * <p><b>빈 관리:</b><br>
@@ -31,6 +33,8 @@ public record PostUpdateReq(
 
         @NotBlank(message = "본문은 필수 입력 항목입니다.")
         String content,
+
+        List<String> hashtags,
 
         String thumbnail
 ) {

@@ -34,20 +34,23 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     /**
-     * 게시글 조회: 작성자(Member)를 한 번의 쿼리로 함께 가져옵니다.
+     * 게시글 조회: 작성자(Member), 해시태그(PostHashTag)를 한 번의 쿼리로 함께 가져옵니다.
      */
-    @Query("select p from Post p join fetch p.member where p.id = :id")
+    @Query("select p from Post p join fetch p.member left join fetch p.postHashTags where p.id = :id")
     Optional<Post> findByIdWithMember(@Param("id") Long id);
 
     /**
-     * 전체 게시글 조회: 작성자(Member)를 한 번의 쿼리로 함께 가져옵니다.
+     * 전체 게시글 조회: 작성자(Member), 해시태그(PostHashTag)를 한 번의 쿼리로 함께 가져옵니다.
      */
-    @Query("select p from Post p join fetch p.member where p.status = 'PUBLISHED'")
+    @Query("select p from Post p join fetch p.member left join fetch p.postHashTags where p.status = 'PUBLISHED'")
     Slice<Post> findAllWithMember(Pageable pageable);
 
     /**
      * 특정 회원 게시글 조회: memberId로 필터링하면서 작성자 정보를 함께 가져옵니다.
      */
-    @Query("select p from Post p join fetch p.member where p.member.id = :memberId")
+    @Query("select p from Post p " +
+            "join fetch p.member " +
+            "left join fetch p.postHashTags " +
+            "where p.member.id = :memberId")
     Slice<Post> findAllByMemberId(@Param("memberId") Long memberId, Pageable pageable);
 }

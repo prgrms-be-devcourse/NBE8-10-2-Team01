@@ -23,20 +23,31 @@ public class HashTagServiceImpl implements HashTagService {
     @Override
     @Transactional
     public void createPostHashTag(Long postId, List<String> tagNames) {
-        if (tagNames == null || tagNames.isEmpty()) return;
+        Post post = postRepository.getReferenceById(postId);
+        applyTags(post, tagNames); // 공통 로직 호출
+    }
+
+    @Override
+    @Transactional
+    public void updatePostHashTag(Long postId, List<String> tagNames) {
+        postHashTagRepository.deleteAllByPostId(postId);
 
         Post post = postRepository.getReferenceById(postId);
+        applyTags(post, tagNames); // 공통 로직 호출
+    }
 
+    /**
+     * [공통 로직] 태그 이름을 분석하여 PostHashTag를 생성하고 저장합니다.
+     */
+    private void applyTags(Post post, List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) return;
 
         for (String rawName : tagNames) {
-
             String normalizedName = normalizeTag(rawName);
-
 
             HashTag hashTag = hashTagRepository.findByName(normalizedName)
                     .orElseGet(() -> hashTagRepository.save(new HashTag(normalizedName)));
 
-            // 3. 중복 연결 방지 및 저장
             if (!postHashTagRepository.existsByPostIdAndHashTagId(post.getId(), hashTag.getId())) {
                 PostHashTag postHashTag = PostHashTag.builder()
                         .post(post)
@@ -45,7 +56,6 @@ public class HashTagServiceImpl implements HashTagService {
                         .build();
 
                 postHashTagRepository.save(postHashTag);
-
             }
         }
     }
