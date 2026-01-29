@@ -143,7 +143,7 @@ class PostControllerTest extends WebMvcTestSupport {
     void updatePostSuccess() throws Exception {
         // [Given]
         Long postId = 1L;
-        PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문", null);
+        PostUpdateReq requestDto = new PostUpdateReq("수정 제목", "수정 본문", null, null);
 
         // [When]
         ResultActions resultActions = mockMvc.perform(

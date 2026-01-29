@@ -103,15 +103,16 @@ public class PostController {
     }
 
     /**
-     * 기존 게시물의 제목과 본문을 수정합니다.
+     * 기존 게시물의 제목, 본문, 썸네일, 해시태그를 수정합니다.
      *
      * <p><b>처리 프로세스:</b><br>
      * 1. 요청된 ID로 게시물을 찾아 제목과 본문을 업데이트합니다. <br>
      * 2. 수정된 본문을 바탕으로 요약본(Summary)을 자동으로 재생성하여 저장합니다. <br>
-     * 3. 성공 시 별도의 응답 본문 없이 {@code 204 No Content} 상태 코드를 반환합니다.
+     * 3. 해시태그 정보를 업데이트합니다. <br>
+     * 4. 성공 시 별도의 응답 본문 없이 {@code 204 No Content} 상태 코드를 반환합니다.
      *
      * @param id      수정할 게시물의 고유 식별자(ID)
-     * @param request 수정할 제목과 본문 정보({@link PostUpdateReq})
+     * @param request 수정할 제목과 본문, 썸네일 및 해시태그 정보({@link PostUpdateReq})
      * @return {@code 204 No Content} 응답
      */
     @PutMapping("/{id}")

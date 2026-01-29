@@ -2,6 +2,7 @@ package com.plog.domain.hashtag.repository;
 
 import com.plog.domain.hashtag.entity.PostHashTag;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,4 +14,8 @@ public interface PostHashTagRepository extends JpaRepository<PostHashTag, Long> 
     List<String> findHashTagNamesByPostId(@Param("postId") Long postId);
 
     boolean existsByPostIdAndHashTagId(Long postId, Long hashTagId);
+
+    @Modifying
+    @Query("delete from PostHashTag p where p.post.id = :postId")
+    void deleteAllByPostId(@Param("postId") Long postId);
 }

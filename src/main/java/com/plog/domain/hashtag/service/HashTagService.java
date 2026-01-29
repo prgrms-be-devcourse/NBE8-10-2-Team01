@@ -19,4 +19,6 @@ public interface HashTagService {
      */
     void createPostHashTag(Long postId, List<String> tagNames);
 
+
+    void updatePostHashTag(Long postId, List<String> tagNames);
 }
