@@ -48,6 +48,9 @@ public class MinioStorage implements ObjectStorage {
     @Value("${minio.endpoint}")
     private String endpoint;
 
+    @Value("${minio.external_endpoint}")
+    private String externalEndpoint;
+
     @Value("${minio.bucket}")
     private String bucket;
 
@@ -68,7 +71,7 @@ public class MinioStorage implements ObjectStorage {
                             .contentType(file.getContentType())
                             .build());
 
-            return endpoint + "/" + bucket + "/" + destination;
+            return externalEndpoint + "/" + bucket + "/" + destination;
 
         } catch (Exception e) {
             throw new ImageException(ImageErrorCode.IMAGE_UPLOAD_FAILED,

@@ -33,6 +33,7 @@ spring:
 minio:
   enabled: ${MINIO_ENABLED:false}
   endpoint: ${MINIO_ENDPOINT}
+  external_endpoint : ${MINIO_EXTERNAL_ENDPOINT}
   access_key: ${MINIO_ACCESS_KEY}
   secret_key: ${MINIO_SECRET_KEY}
   bucket: team-bucket
