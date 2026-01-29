@@ -39,7 +39,7 @@ public record PostInfoRes(
         LocalDateTime createDate,
         LocalDateTime modifyDate,
         Slice<CommentInfoRes> comments,
-        List<String> hashtags
+        List<String> hashtags,
         String nickname,
         String profileImage
 ) {
@@ -60,7 +60,7 @@ public record PostInfoRes(
                 null,
                 post.getPostHashTags().stream()
                         .map(PostHashTag::getDisplayName)
-                        .toList()
+                        .toList(),
 
                 post.getMember().getNickname(),
                 post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
@@ -84,7 +84,7 @@ public record PostInfoRes(
                 comments,
                 post.getPostHashTags().stream()
                         .map(PostHashTag::getDisplayName)
-                        .toList()
+                        .toList(),
                 post.getMember().getNickname(),
                 post.getMember().getProfileImage() != null ? post.getMember().getProfileImage().getAccessUrl() : null
         );

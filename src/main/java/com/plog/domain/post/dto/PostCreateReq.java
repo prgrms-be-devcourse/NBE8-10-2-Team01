@@ -34,7 +34,7 @@ public record PostCreateReq(
         @NotBlank(message = "본문은 필수 입력 항목입니다.")
         String content,
 
-        List<String> hashtags
+        List<String> hashtags,
 
         String thumbnail
 ) {
