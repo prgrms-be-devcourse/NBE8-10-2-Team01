@@ -37,19 +37,15 @@ public interface ImageRepository extends JpaRepository<Image, Long> {
     /**
      * 사용되지 않는 고아 이미지(Orphan Image) 목록을 조회합니다.
      * <p>
-     * 아래 두 조건을 모두 만족하는 이미지를 반환합니다. <br>
-     * 1. {@link com.plog.domain.member.entity.Member}의 프로필 이미지로 사용되지 않는 이미지 <br>
-     * 2. {@link com.plog.domain.post.entity.Post}의 썸네일로 사용되지 않는 이미지
+     * {@link com.plog.domain.post.entity.Post}의 썸네일로 사용되지 않는 이미지를 반환합니다. <br>
+     * 프로필 이미지는 교체 시 즉시 삭제 처리되므로 조회 대상에서 제외됩니다.
      *
      * @return 사용되지 않는 이미지 목록
      */
 
     @Query("""
     SELECT i FROM Image i
-    WHERE i NOT IN (
-        SELECT m.profileImage FROM Member m WHERE m.profileImage IS NOT NULL
-    )
-    AND i.accessUrl NOT IN (
+    WHERE i.accessUrl NOT IN (
         SELECT p.thumbnail FROM Post p WHERE p.thumbnail IS NOT NULL
     )
     """)
