@@ -1,8 +1,11 @@
 package com.plog.domain.image.repository;
 
 import com.plog.domain.image.entity.Image;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -30,4 +33,26 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ImageRepository extends JpaRepository<Image, Long> {
     Optional<Image> findByAccessUrl(String accessUrl);
+
+    /**
+     * 사용되지 않는 고아 이미지(Orphan Image) 목록을 조회합니다.
+     * <p>
+     * 아래 두 조건을 모두 만족하는 이미지를 반환합니다. <br>
+     * 1. {@link com.plog.domain.member.entity.Member}의 프로필 이미지로 사용되지 않는 이미지 <br>
+     * 2. {@link com.plog.domain.post.entity.Post}의 썸네일로 사용되지 않는 이미지
+     *
+     * @return 사용되지 않는 이미지 목록
+     */
+
+    @Query("""
+    SELECT i FROM Image i
+    WHERE i NOT IN (
+        SELECT m.profileImage FROM Member m WHERE m.profileImage IS NOT NULL
+    )
+    AND i.accessUrl NOT IN (
+        SELECT p.thumbnail FROM Post p WHERE p.thumbnail IS NOT NULL
+    )
+    """)
+    List<Image> findUnusedImages();
+
 }
